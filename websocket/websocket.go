@@ -53,7 +53,7 @@ func (c *gorillaConn) WriteJSON(v any) error {
 		return ErrCloseExpected
 	}
 	if websocket.IsUnexpectedCloseError(err) {
-		return ErrCloseUnxpected
+		return err
 	}
 	return err
 }
