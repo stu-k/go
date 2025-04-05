@@ -5,18 +5,19 @@ import (
 	"strings"
 )
 
-type anyfn func(Data, Data) (Data, error)
+type anyfn func(...Data) (Data, error)
 
 type Op struct {
 	val string
 	fn  anyfn
+	air int
 }
 
-func NewOp(v string, fn anyfn) Op         { return Op{v, fn} }
-func (o Op) Type() string                 { return "op" }
-func (o Op) Value() any                   { return o.val }
-func (o Op) String() string               { return fmt.Sprintf("op:%s", o.val) }
-func (o Op) Exec(x, y Data) (Data, error) { return o.fn(x, y) }
+func NewOp(v string, fn anyfn, air int) Op { return Op{v, fn, air} }
+func (o Op) Type() string                  { return "op" }
+func (o Op) Value() any                    { return o.val }
+func (o Op) String() string                { return fmt.Sprintf("op:%s", o.val) }
+func (o Op) Exec(d ...Data) (Data, error)  { return o.fn(d...) }
 
 func isOp(s string) bool {
 	for k, _ := range opMap {
@@ -31,7 +32,7 @@ var opMap = map[string]anyfn{
 	"*m*": opMult,
 }
 
-func opMult(x, y Data) (Data, error) { return nil, nil }
+func opMult(d ...Data) (Data, error) { return nil, nil }
 
 func parseOp(input string) (Data, string, error) {
 	if input == "" {

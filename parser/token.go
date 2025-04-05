@@ -30,7 +30,7 @@ func parseToken(input string) (Data, string, error) {
 		case isToken(r) || (i > 0 && unicode.IsDigit(r)) || r == '_':
 			sofar += string(r)
 			continue
-		case r == ' ':
+		case unicode.IsSpace(r):
 			return Token{sofar}, input[i+1:], nil
 		default:
 			if len(sofar) > 0 {

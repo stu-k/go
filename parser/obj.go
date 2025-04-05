@@ -1,6 +1,9 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+	"unicode"
+)
 
 type Obj struct{ val map[string]Data }
 
@@ -34,7 +37,7 @@ func parseObj(input string) (Data, string, error) {
 	for i := 0; i < len(toparse); i++ {
 		r := rune(toparse[i])
 		switch {
-		case r == ' ':
+		case unicode.IsSpace(r):
 			continue
 		case r == '}':
 			// can't end on key or comma

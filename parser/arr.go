@@ -1,6 +1,9 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+	"unicode"
+)
 
 type Arr struct{ val []Data }
 
@@ -30,7 +33,7 @@ func parseArr(input string) (Data, string, error) {
 	for i := 0; i < len(toparse); i++ {
 		r := rune(toparse[i])
 		switch {
-		case r == ' ':
+		case unicode.IsSpace(r):
 			continue
 		case r == ']':
 			if lastWasComma {

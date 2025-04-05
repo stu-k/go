@@ -1,6 +1,9 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+	"unicode"
+)
 
 type Paren struct{ val []Data }
 
@@ -32,7 +35,7 @@ func parseParen(input string) (Data, string, error) {
 	for i := 0; i < len(toparse); i++ {
 		r := rune(toparse[i])
 		switch {
-		case r == ' ':
+		case unicode.IsSpace(r):
 			continue
 		case r == ')':
 			if len(parsed) == 1 {

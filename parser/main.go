@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"unicode"
 )
 
 type Data interface {
@@ -64,7 +65,7 @@ func parse(input string, first bool) (Data, string, error) {
 
 	r := rune(input[0])
 	switch {
-	case r == ' ':
+	case unicode.IsSpace(r):
 		return parse(input[1:], false)
 	case isToken(r):
 		fmt.Printf("is token: %s\n", input)
