@@ -12,6 +12,12 @@ type Data interface {
 	String() string
 }
 
+type DataUnknown struct{}
+
+func (d DataUnknown) Type() string   { return "unknown" }
+func (d DataUnknown) String() string { return "unknown" }
+func (d DataUnknown) Value() any     { return nil }
+
 func main() {
 	args := os.Args[1:]
 	input := strings.Join(args, " ")
@@ -60,6 +66,6 @@ func parse(input string, first bool) (Data, string, error) {
 		fmt.Printf("is paren: %s\n", input)
 		return parseParens(input)
 	default:
-		return nil, "", NewUnexpedTokenErr("initial default", r)
+		return DataUnknown{}, "", NewUnexpectedTokenErr("initial default", r)
 	}
 }

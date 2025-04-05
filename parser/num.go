@@ -30,27 +30,27 @@ func parseNum(input string) (Data, string, error) {
 			continue
 		case unicode.IsSpace(r):
 			if sofar == "" {
-				return nil, "", fmt.Errorf("empty num")
+				return handleError(fmt.Errorf("empty num"))
 			}
 			num, err := NewNum(sofar)
 			if err != nil {
-				return nil, "", fmt.Errorf("invalid num: %s", sofar)
+				return handleError(fmt.Errorf("invalid num: %s", sofar))
 			}
 			return num, input[i:], nil
 		default:
 			if len(sofar) > 0 {
 				num, err := NewNum(sofar)
 				if err != nil {
-					return nil, "", err
+					return handleError(err)
 				}
 				return num, input[i:], nil
 			}
-			return nil, "", fmt.Errorf("invalid char in num: %s", string(r))
+			return handleError(fmt.Errorf("invalid char in num: %s", string(r)))
 		}
 	}
 	n, err := strconv.Atoi(sofar)
 	if err != nil {
-		return nil, "", fmt.Errorf("invalid num: %s", sofar)
+		return handleError(fmt.Errorf("invalid num: %s", sofar))
 	}
 	return Num{n}, "", nil
 }

@@ -21,7 +21,7 @@ func parseToken(input string) (Data, string, error) {
 	for i := 0; i < len(input); i++ {
 		r := rune(input[i])
 		switch {
-		case isToken(r) || (i > 0 && unicode.IsDigit(r)):
+		case isToken(r) || (i > 0 && unicode.IsDigit(r)) || r == '_':
 			sofar += string(r)
 			continue
 		case r == ' ':
@@ -33,7 +33,7 @@ func parseToken(input string) (Data, string, error) {
 			if len(sofar) > 0 {
 				return Token{sofar}, input[i:], nil
 			}
-			return nil, "", fmt.Errorf("unexpected token: %v", string(r))
+			return handleError(fmt.Errorf("unexpected token: %v", string(r)))
 		}
 	}
 	return Token{sofar}, "", nil

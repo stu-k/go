@@ -30,7 +30,7 @@ func parseArr(input string) (Data, string, error) {
 				lastWasComma = false
 				continue
 			}
-			return nil, "", NewUnexpedTokenErr("arr started", '[')
+			return nil, "", NewUnexpectedTokenErr("arr started", '[')
 		}
 		switch {
 		case r == ' ':
@@ -39,14 +39,17 @@ func parseArr(input string) (Data, string, error) {
 			if lastWasComma {
 				return nil, "", NewExpectationErr(']', ',')
 			}
-			return Arr{parsed}, toParse[i:], nil
+			return Arr{parsed}, toParse[i+1:], nil
 		case r == ',':
 			if len(parsed) == 0 {
-				return nil, "", NewUnexpedTokenErr("arr comma", r)
+				return nil, "", NewUnexpectedTokenErr("arr comma", r)
 			}
 			lastWasComma = true
 			continue
 		default:
+			if len(parsed) > 0 && !lastWasComma {
+				return nil, "", NewExpectationErr(']', r)
+			}
 			data, rest, err := parse(toParse[i:], false)
 			if err != nil {
 				return nil, "", err
