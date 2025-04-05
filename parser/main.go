@@ -23,14 +23,33 @@ func main() {
 	input := strings.Join(args, " ")
 
 	fmt.Printf("parsing: \"%v\"\n", input)
-	result, rest, err := parse(input, true)
+	result, err := mainParse(input)
 	if err != nil {
 		fmt.Printf("error parsing input: %v\n", err)
 		return
 	}
 
-	fmt.Printf("result: \"%s\"\n", result)
-	fmt.Printf("rest: \"%s\"\n", rest)
+	fmt.Printf("result: \"%+v\"\n", result)
+}
+
+func mainParse(input string) ([]Data, error) {
+	data := make([]Data, 0)
+
+	result, rest, err := parse(input, true)
+	if err != nil {
+		return nil, err
+	}
+	data = append(data, result)
+
+	for rest != "" {
+		result, rest, err = parse(rest, false)
+		if err != nil {
+			return nil, err
+		}
+		data = append(data, result)
+	}
+
+	return data, nil
 }
 
 func parse(input string, first bool) (Data, string, error) {
@@ -65,6 +84,9 @@ func parse(input string, first bool) (Data, string, error) {
 	case isParen(r):
 		fmt.Printf("is paren: %s\n", input)
 		return parseParen(input)
+	// case isOp(string(r)):
+	// 	fmt.Printf("is op: %s\n", input)
+	// 	return parseOp(input)
 	default:
 		return DataUnknown{}, "", NewUnexpectedTokenErr("initial:default", r)
 	}
