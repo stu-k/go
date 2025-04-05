@@ -15,6 +15,10 @@ func NewExpectationErr(got rune, want rune) ParseError {
 	return ParseError{fmt.Sprintf("expected \"%s\"; got \"%s\"", string(got), string(want))}
 }
 
+func NewSingleExpectationErr(want rune) ParseError {
+	return ParseError{fmt.Sprintf("expected \"%s\"", string(want))}
+}
+
 func handleError(err error) (Data, string, error) {
 	return DataUnknown{}, "", err
 }

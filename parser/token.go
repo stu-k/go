@@ -17,6 +17,12 @@ func isToken(r rune) bool {
 	return r == '_' || unicode.IsLetter(r)
 }
 func parseToken(input string) (Data, string, error) {
+	if input == "" {
+		panic(fmt.Errorf("token init with: \"\""))
+	} else if !isToken(rune(input[0])) {
+		panic(fmt.Errorf("token init with: \"%s\"", string(input[0])))
+	}
+
 	var sofar string
 	for i := 0; i < len(input); i++ {
 		r := rune(input[i])
@@ -25,15 +31,12 @@ func parseToken(input string) (Data, string, error) {
 			sofar += string(r)
 			continue
 		case r == ' ':
-			if len(sofar) == 0 {
-				panic(fmt.Sprintf("token was empty: \"%v\"", input))
-			}
 			return Token{sofar}, input[i+1:], nil
 		default:
 			if len(sofar) > 0 {
 				return Token{sofar}, input[i:], nil
 			}
-			return handleError(fmt.Errorf("unexpected token: %v", string(r)))
+			return handleError(NewUnexpectedTokenErr("token:default", r))
 		}
 	}
 	return Token{sofar}, "", nil

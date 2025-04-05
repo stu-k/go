@@ -45,9 +45,10 @@ func parseNum(input string) (Data, string, error) {
 				}
 				return num, input[i:], nil
 			}
-			return handleError(fmt.Errorf("invalid char in num: %s", string(r)))
+			return handleError(NewUnexpectedTokenErr("num:default", r))
 		}
 	}
+
 	n, err := strconv.Atoi(sofar)
 	if err != nil {
 		return handleError(fmt.Errorf("invalid num: %s", sofar))

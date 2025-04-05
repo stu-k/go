@@ -17,43 +17,42 @@ func (a Arr) String() string {
 
 func isArr(r rune) bool { return r == '[' }
 func parseArr(input string) (Data, string, error) {
+	if input == "" {
+		panic(fmt.Errorf("arr init with: \"\""))
+	} else if input[0] != '[' {
+		panic(fmt.Errorf("arr init with: \"%s\"", string(input[0])))
+	}
+
 	parsed := make([]Data, 0)
 	lastWasComma := false
-	started := false
-	toParse := input
+	toParse := input[1:]
 
 	for i := 0; i < len(toParse); i++ {
 		r := rune(toParse[i])
-		if !started {
-			if r == '[' {
-				started = true
-				lastWasComma = false
-				continue
-			}
-			return nil, "", NewUnexpectedTokenErr("arr started", '[')
-		}
 		switch {
 		case r == ' ':
 			continue
 		case r == ']':
 			if lastWasComma {
-				return nil, "", NewExpectationErr(']', ',')
+				return handleError(NewExpectationErr(']', ','))
 			}
 			return Arr{parsed}, toParse[i+1:], nil
 		case r == ',':
 			if len(parsed) == 0 {
-				return nil, "", NewUnexpectedTokenErr("arr comma", r)
+				return handleError(NewUnexpectedTokenErr("arr:comma", r))
 			}
 			lastWasComma = true
 			continue
 		default:
 			if len(parsed) > 0 && !lastWasComma {
-				return nil, "", NewExpectationErr(']', r)
+				return handleError(NewSingleExpectationErr(']'))
 			}
+
 			data, rest, err := parse(toParse[i:], false)
 			if err != nil {
-				return nil, "", err
+				return handleError(err)
 			}
+
 			parsed = append(parsed, data)
 			if rest != "" {
 				toParse = rest
@@ -63,5 +62,5 @@ func parseArr(input string) (Data, string, error) {
 			continue
 		}
 	}
-	return nil, "", NewExpectationErr(']', ' ')
+	return handleError(NewExpectationErr(']', ' '))
 }

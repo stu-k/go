@@ -37,14 +37,14 @@ func parseParens(input string) (Data, string, error) {
 			if len(parsed) == 1 {
 				return NewParens(parsed), toParse[i+1:], nil
 			}
-			return handleError(NewUnexpectedTokenErr("parens close paren", ')'))
+			return handleError(NewUnexpectedTokenErr("parens:close", ')'))
 		default:
 			data, rest, err := parse(toParse[i:], false)
 			if err != nil {
 				return handleError(err)
 			}
 			if len(parsed) > 0 {
-				return handleError(NewUnexpectedTokenErr("parens default", rune(toParse[i])))
+				return handleError(NewUnexpectedTokenErr("parens:default", rune(toParse[i])))
 			}
 			parsed = append(parsed, data)
 			if len(rest) > 0 {
