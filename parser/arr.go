@@ -4,10 +4,10 @@ import "fmt"
 
 type Arr struct{ val []Data }
 
-func (a Arr) Type() string { return "array" }
+func (a Arr) Type() string { return "arr" }
 func (a Arr) Value() any   { return a.val }
 func (a Arr) String() string {
-	sofar := "["
+	sofar := "arr:["
 	for _, d := range a.val {
 		sofar += fmt.Sprintf(" %v", d)
 	}
@@ -25,10 +25,10 @@ func parseArr(input string) (Data, string, error) {
 
 	parsed := make([]Data, 0)
 	lastWasComma := false
-	toParse := input[1:]
+	toparse := input[1:]
 
-	for i := 0; i < len(toParse); i++ {
-		r := rune(toParse[i])
+	for i := 0; i < len(toparse); i++ {
+		r := rune(toparse[i])
 		switch {
 		case r == ' ':
 			continue
@@ -36,7 +36,7 @@ func parseArr(input string) (Data, string, error) {
 			if lastWasComma {
 				return handleError(NewExpectationErr(']', ','))
 			}
-			return Arr{parsed}, toParse[i+1:], nil
+			return Arr{parsed}, toparse[i+1:], nil
 		case r == ',':
 			if len(parsed) == 0 {
 				return handleError(NewUnexpectedTokenErr("arr:comma", r))
@@ -48,14 +48,14 @@ func parseArr(input string) (Data, string, error) {
 				return handleError(NewSingleExpectationErr(']'))
 			}
 
-			data, rest, err := parse(toParse[i:], false)
+			data, rest, err := parse(toparse[i:], false)
 			if err != nil {
 				return handleError(err)
 			}
 
 			parsed = append(parsed, data)
 			if rest != "" {
-				toParse = rest
+				toparse = rest
 				i = -1
 			}
 			lastWasComma = false

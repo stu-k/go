@@ -53,19 +53,19 @@ func parse(input string, first bool) (Data, string, error) {
 	case isNum(r):
 		fmt.Printf("is num: %s\n", input)
 		return parseNum(input)
-	case r == '{':
+	case isObj(r):
 		fmt.Printf("is obj: %s\n", input)
 		return parseObj(input)
 	case isArr(r):
 		fmt.Printf("is arr: %s\n", input)
 		return parseArr(input)
-	case r == '"':
+	case isStr(r):
 		fmt.Printf("is str: %s\n", input)
 		return parseString(input)
-	case r == '(':
+	case isParen(r):
 		fmt.Printf("is paren: %s\n", input)
-		return parseParens(input)
+		return parseParen(input)
 	default:
-		return DataUnknown{}, "", NewUnexpectedTokenErr("initial default", r)
+		return DataUnknown{}, "", NewUnexpectedTokenErr("initial:default", r)
 	}
 }

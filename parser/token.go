@@ -11,7 +11,7 @@ type Token struct {
 
 func (t Token) Type() string   { return "token" }
 func (t Token) Value() any     { return t.val }
-func (t Token) String() string { return fmt.Sprintf("token: %s", t.val) }
+func (t Token) String() string { return fmt.Sprintf("token:%s", t.val) }
 
 func isToken(r rune) bool {
 	return r == '_' || unicode.IsLetter(r)
