@@ -2,13 +2,13 @@ package main
 
 import "fmt"
 
-type Arr struct{ contains []Data }
+type Arr struct{ val []Data }
 
 func (a Arr) Type() string { return "array" }
-func (a Arr) Value() any   { return a.contains }
+func (a Arr) Value() any   { return a.val }
 func (a Arr) String() string {
 	sofar := "["
-	for _, d := range a.contains {
+	for _, d := range a.val {
 		sofar += fmt.Sprintf(" %v", d)
 	}
 	sofar += " ]"
