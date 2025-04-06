@@ -16,7 +16,7 @@ func (s *Str) String() string { return fmt.Sprintf("str:\"%s\"", s.val) }
 func (s *Str) Check(r rune) bool { return r == '"' }
 func (str *Str) Parse(s string) (Data, string, error) {
 	if err := errors.CheckInit(str, s); err != nil {
-		return errors.HandelError(err)
+		return errors.HandeleError(err)
 	}
 
 	toparse := s[1:]
@@ -33,5 +33,5 @@ func (str *Str) Parse(s string) (Data, string, error) {
 		}
 	}
 
-	return errors.HandelError(errors.NewExpectedCharErr('"'))
+	return errors.HandeleError(errors.NewExpectedCharErr('"'))
 }

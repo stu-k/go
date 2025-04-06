@@ -26,7 +26,7 @@ func (o *Obj) String() string {
 func (o *Obj) Check(r rune) bool { return r == '{' }
 func (o *Obj) Parse(s string) (Data, string, error) {
 	if err := errors.CheckInit(o, s); err != nil {
-		return errors.HandelError(err)
+		return errors.HandeleError(err)
 	}
 
 	toparse := s[1:]
@@ -44,40 +44,40 @@ func (o *Obj) Parse(s string) (Data, string, error) {
 		case r == '}':
 			// can't end on key or comma
 			if key != "" || isComma {
-				return errors.HandelError(errors.NewUnexpectedCharErr('}'))
+				return errors.HandeleError(errors.NewUnexpectedCharErr('}'))
 			}
 			return NewObject(res), toparse[i+1:], nil
 		case r == ':':
 			// can't use colon without key
 			if key == "" {
-				return errors.HandelError(errors.NewUnexpectedCharErr(':'))
+				return errors.HandeleError(errors.NewUnexpectedCharErr(':'))
 			}
 			isColon = true
 			continue
 		case r == ',':
 			// comma comes after a complete kv set
 			if len(res) == 0 || key != "" {
-				return errors.HandelError(errors.NewUnexpectedCharErr(','))
+				return errors.HandeleError(errors.NewUnexpectedCharErr(','))
 			}
 			isComma = true
 			continue
 		default:
 			// need colon after key
 			if key != "" && !isColon {
-				return errors.HandelError(errors.NewExpectedCharErr(':'))
+				return errors.HandeleError(errors.NewExpectedCharErr(':'))
 			}
 
 			// parse token
 			data, rest, err := parse(toparse[i:], mainOpts)
 			if err != nil {
-				return errors.HandelError(err)
+				return errors.HandeleError(err)
 			}
 
 			// set value
 			if key != "" {
 				// need comma between kv sets
 				if len(res) > 0 && !isComma {
-					return errors.HandelError(errors.NewExpectedCharErr(','))
+					return errors.HandeleError(errors.NewExpectedCharErr(','))
 				}
 				res[key] = data
 				key = ""
@@ -93,7 +93,7 @@ func (o *Obj) Parse(s string) (Data, string, error) {
 			case "str":
 				k, err := handleSetKey(data)
 				if err != nil {
-					return errors.HandelError(err)
+					return errors.HandeleError(err)
 				}
 				key = k
 				toparse = rest
@@ -102,19 +102,19 @@ func (o *Obj) Parse(s string) (Data, string, error) {
 			case "var":
 				k, err := handleSetKey(data)
 				if err != nil {
-					return errors.HandelError(err)
+					return errors.HandeleError(err)
 				}
 				key = k
 				toparse = rest
 				i = -1
 				continue
 			default:
-				return errors.HandelError(fmt.Errorf("invalid obj key type: %s", data.Type()))
+				return errors.HandeleError(fmt.Errorf("invalid obj key type: %s", data.Type()))
 			}
 		}
 	}
 
-	return errors.HandelError(errors.NewExpectedCharErr('}'))
+	return errors.HandeleError(errors.NewExpectedCharErr('}'))
 }
 
 func handleSetKey(data Data) (string, error) {

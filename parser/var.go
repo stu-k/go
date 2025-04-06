@@ -20,7 +20,7 @@ func (t *Var) Check(r rune) bool {
 }
 func (t *Var) Parse(s string) (Data, string, error) {
 	if err := errors.CheckInit(t, s); err != nil {
-		return errors.HandelError(err)
+		return errors.HandeleError(err)
 	}
 
 	var res string
@@ -36,7 +36,7 @@ func (t *Var) Parse(s string) (Data, string, error) {
 			if len(res) > 0 {
 				return &Var{res}, s[i:], nil
 			}
-			return errors.HandelError(errors.NewUnexpectedCharErr(r))
+			return errors.HandeleError(errors.NewUnexpectedCharErr(r))
 		}
 	}
 

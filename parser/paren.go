@@ -26,7 +26,7 @@ func (p *Paren) String() string {
 func (p *Paren) Check(r rune) bool { return r == '(' }
 func (p *Paren) Parse(s string) (Data, string, error) {
 	if err := errors.CheckInit(p, s); err != nil {
-		return errors.HandelError(err)
+		return errors.HandeleError(err)
 	}
 
 	toparse := s[1:]
@@ -41,14 +41,14 @@ func (p *Paren) Parse(s string) (Data, string, error) {
 			if len(res) == 1 {
 				return NewParen(res), toparse[i+1:], nil
 			}
-			return errors.HandelError(errors.NewUnexpectedCharErr(')'))
+			return errors.HandeleError(errors.NewUnexpectedCharErr(')'))
 		default:
 			data, rest, err := parse(toparse[i:], mainOpts)
 			if err != nil {
-				return errors.HandelError(err)
+				return errors.HandeleError(err)
 			}
 			if len(res) > 0 {
-				return errors.HandelError(errors.NewUnexpectedCharErr(rune(toparse[i])))
+				return errors.HandeleError(errors.NewUnexpectedCharErr(rune(toparse[i])))
 			}
 			res = append(res, data)
 			if len(rest) > 0 {
@@ -56,9 +56,9 @@ func (p *Paren) Parse(s string) (Data, string, error) {
 				i = -1
 				continue
 			}
-			return errors.HandelError(errors.NewExpectedCharErr(')'))
+			return errors.HandeleError(errors.NewExpectedCharErr(')'))
 		}
 	}
 
-	return errors.HandelError(errors.NewExpectedCharErr(')'))
+	return errors.HandeleError(errors.NewExpectedCharErr(')'))
 }

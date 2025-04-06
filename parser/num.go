@@ -25,7 +25,7 @@ func (n *Num) String() string { return fmt.Sprintf("num:%d", n.val) }
 func (n *Num) Check(r rune) bool { return unicode.IsDigit(r) }
 func (n *Num) Parse(s string) (Data, string, error) {
 	if err := errors.CheckInit(n, s); err != nil {
-		return errors.HandelError(err)
+		return errors.HandeleError(err)
 	}
 
 	var res string
@@ -36,28 +36,28 @@ func (n *Num) Parse(s string) (Data, string, error) {
 			continue
 		case unicode.IsSpace(r):
 			if res == "" {
-				return errors.HandelError(fmt.Errorf("empty num"))
+				return errors.HandeleError(fmt.Errorf("empty num"))
 			}
 			num, err := NewNum(res)
 			if err != nil {
-				return errors.HandelError(fmt.Errorf("invalid num: %s", res))
+				return errors.HandeleError(fmt.Errorf("invalid num: %s", res))
 			}
 			return num, s[i:], nil
 		default:
 			if len(res) > 0 {
 				num, err := NewNum(res)
 				if err != nil {
-					return errors.HandelError(err)
+					return errors.HandeleError(err)
 				}
 				return num, s[i:], nil
 			}
-			return errors.HandelError(errors.NewUnexpectedCharErr(r))
+			return errors.HandeleError(errors.NewUnexpectedCharErr(r))
 		}
 	}
 
 	num, err := strconv.Atoi(res)
 	if err != nil {
-		return errors.HandelError(fmt.Errorf("invalid num: %s", res))
+		return errors.HandeleError(fmt.Errorf("invalid num: %s", res))
 	}
 	return &Num{num}, "", nil
 }

@@ -62,7 +62,7 @@ func (op Op) Check(r rune) bool {
 }
 func (op *Op) Parse(s string) (Data, string, error) {
 	if err := errors.CheckInit(op, s); err != nil {
-		return errors.HandelError(err)
+		return errors.HandeleError(err)
 	}
 
 	// var res string

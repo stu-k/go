@@ -52,7 +52,7 @@ type data interface {
 	String() string
 }
 
-func HandelError(err error) (data, string, error) {
+func HandeleError(err error) (data, string, error) {
 	return nil, "", err
 }
 
