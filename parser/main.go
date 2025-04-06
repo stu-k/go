@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
 	"os"
 	"strings"
@@ -20,17 +21,23 @@ func (d DataUnknown) String() string { return "unknown" }
 func (d DataUnknown) Value() any     { return nil }
 
 func main() {
-	args := os.Args[1:]
-	input := strings.Join(args, " ")
+	scanner := bufio.NewScanner(os.Stdin)
+	for {
+		fmt.Print("> ")
+		if !scanner.Scan() {
+			break
+		}
+		input := scanner.Text()
 
-	fmt.Printf("parsing: \"%v\"\n", input)
-	result, err := mainParse(input)
-	if err != nil {
-		fmt.Printf("error parsing input: %v\n", err)
-		return
+		fmt.Printf("parsing: \"%v\"\n", input)
+		result, err := mainParse(input)
+		if err != nil {
+			fmt.Printf("error parsing input: %v\n", err)
+			return
+		}
+
+		fmt.Printf("result: \"%+v\"\n", result)
 	}
-
-	fmt.Printf("result: \"%+v\"\n", result)
 }
 
 func mainParse(input string) ([]Data, error) {
