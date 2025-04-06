@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"strconv"
 	"unicode"
+
+	"github.com/stu-k/go/parser/errors"
 )
 
 type Num struct{ val int }
@@ -22,8 +24,8 @@ func (n *Num) String() string { return fmt.Sprintf("num:%d", n.val) }
 
 func (n *Num) Check(r rune) bool { return unicode.IsDigit(r) }
 func (n *Num) Parse(s string) (Data, string, error) {
-	if err := checkInit(n, s); err != nil {
-		return handleError(err)
+	if err := errors.CheckInit(n, s); err != nil {
+		return errors.HandelError(err)
 	}
 
 	var res string
@@ -34,28 +36,28 @@ func (n *Num) Parse(s string) (Data, string, error) {
 			continue
 		case unicode.IsSpace(r):
 			if res == "" {
-				return handleError(fmt.Errorf("empty num"))
+				return errors.HandelError(fmt.Errorf("empty num"))
 			}
 			num, err := NewNum(res)
 			if err != nil {
-				return handleError(fmt.Errorf("invalid num: %s", res))
+				return errors.HandelError(fmt.Errorf("invalid num: %s", res))
 			}
 			return num, s[i:], nil
 		default:
 			if len(res) > 0 {
 				num, err := NewNum(res)
 				if err != nil {
-					return handleError(err)
+					return errors.HandelError(err)
 				}
 				return num, s[i:], nil
 			}
-			return handleError(NewUnexpectedCharErr(r))
+			return errors.HandelError(errors.NewUnexpectedCharErr(r))
 		}
 	}
 
 	num, err := strconv.Atoi(res)
 	if err != nil {
-		return handleError(fmt.Errorf("invalid num: %s", res))
+		return errors.HandelError(fmt.Errorf("invalid num: %s", res))
 	}
 	return &Num{num}, "", nil
 }

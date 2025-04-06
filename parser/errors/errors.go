@@ -1,4 +1,4 @@
-package main
+package errors
 
 import "fmt"
 
@@ -46,11 +46,17 @@ func NewEndOfInputErr() error {
 	return EndOfInputErr{}
 }
 
-func handleError(err error) (Data, string, error) {
+type data interface {
+	Type() string
+	Value() any
+	String() string
+}
+
+func HandelError(err error) (data, string, error) {
 	return nil, "", err
 }
 
-func checkInit(data interface {
+func CheckInit(data interface {
 	Check(rune) bool
 	Type() string
 }, s string) error {

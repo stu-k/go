@@ -3,6 +3,8 @@ package main
 import (
 	"fmt"
 	"unicode"
+
+	"github.com/stu-k/go/parser/errors"
 )
 
 type Paren struct{ val []Data }
@@ -23,8 +25,8 @@ func (p *Paren) String() string {
 
 func (p *Paren) Check(r rune) bool { return r == '(' }
 func (p *Paren) Parse(s string) (Data, string, error) {
-	if err := checkInit(p, s); err != nil {
-		return handleError(err)
+	if err := errors.CheckInit(p, s); err != nil {
+		return errors.HandelError(err)
 	}
 
 	toparse := s[1:]
@@ -39,14 +41,14 @@ func (p *Paren) Parse(s string) (Data, string, error) {
 			if len(res) == 1 {
 				return NewParen(res), toparse[i+1:], nil
 			}
-			return handleError(NewUnexpectedCharErr(')'))
+			return errors.HandelError(errors.NewUnexpectedCharErr(')'))
 		default:
-			data, rest, err := parse(toparse[i:], mainOpts, false)
+			data, rest, err := parse(toparse[i:], mainOpts)
 			if err != nil {
-				return handleError(err)
+				return errors.HandelError(err)
 			}
 			if len(res) > 0 {
-				return handleError(NewUnexpectedCharErr(rune(toparse[i])))
+				return errors.HandelError(errors.NewUnexpectedCharErr(rune(toparse[i])))
 			}
 			res = append(res, data)
 			if len(rest) > 0 {
@@ -54,9 +56,9 @@ func (p *Paren) Parse(s string) (Data, string, error) {
 				i = -1
 				continue
 			}
-			return handleError(NewExpectedCharErr(')'))
+			return errors.HandelError(errors.NewExpectedCharErr(')'))
 		}
 	}
 
-	return handleError(NewExpectedCharErr(')'))
+	return errors.HandelError(errors.NewExpectedCharErr(')'))
 }

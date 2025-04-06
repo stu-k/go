@@ -3,6 +3,8 @@ package main
 import (
 	"fmt"
 	"unicode"
+
+	"github.com/stu-k/go/parser/errors"
 )
 
 type Arr struct{ val []Data }
@@ -20,8 +22,8 @@ func (a *Arr) String() string {
 
 func (a *Arr) Check(r rune) bool { return r == '[' }
 func (a *Arr) Parse(s string) (Data, string, error) {
-	if err := checkInit(a, s); err != nil {
-		return handleError(err)
+	if err := errors.CheckInit(a, s); err != nil {
+		return errors.HandelError(err)
 	}
 
 	toparse := s[1:]
@@ -35,23 +37,23 @@ func (a *Arr) Parse(s string) (Data, string, error) {
 			continue
 		case r == ']':
 			if lastWasComma {
-				return handleError(NewExpectedCharErr(']'))
+				return errors.HandelError(errors.NewExpectedCharErr(']'))
 			}
 			return &Arr{res}, toparse[i+1:], nil
 		case r == ',':
 			if len(res) == 0 {
-				return handleError(NewUnexpectedCharErr(r))
+				return errors.HandelError(errors.NewUnexpectedCharErr(r))
 			}
 			lastWasComma = true
 			continue
 		default:
 			if len(res) > 0 && !lastWasComma {
-				return handleError(NewExpectedCharErr(']'))
+				return errors.HandelError(errors.NewExpectedCharErr(']'))
 			}
 
-			data, rest, err := parse(toparse[i:], mainOpts, false)
+			data, rest, err := parse(toparse[i:], mainOpts)
 			if err != nil {
-				return handleError(err)
+				return errors.HandelError(err)
 			}
 
 			res = append(res, data)
@@ -63,5 +65,5 @@ func (a *Arr) Parse(s string) (Data, string, error) {
 			continue
 		}
 	}
-	return handleError(NewExpectedCharErr(']'))
+	return errors.HandelError(errors.NewExpectedCharErr(']'))
 }

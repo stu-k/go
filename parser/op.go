@@ -2,6 +2,8 @@ package main
 
 import (
 	"fmt"
+
+	"github.com/stu-k/go/parser/errors"
 )
 
 type anyfn func(...Data) (Data, error)
@@ -59,8 +61,8 @@ func (op Op) Check(r rune) bool {
 	return false
 }
 func (op *Op) Parse(s string) (Data, string, error) {
-	if err := checkInit(op, s); err != nil {
-		return handleError(err)
+	if err := errors.CheckInit(op, s); err != nil {
+		return errors.HandelError(err)
 	}
 
 	// var res string

@@ -1,6 +1,10 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+
+	"github.com/stu-k/go/parser/errors"
+)
 
 type Str struct{ val string }
 
@@ -11,8 +15,8 @@ func (s *Str) String() string { return fmt.Sprintf("str:\"%s\"", s.val) }
 
 func (s *Str) Check(r rune) bool { return r == '"' }
 func (str *Str) Parse(s string) (Data, string, error) {
-	if err := checkInit(str, s); err != nil {
-		return handleError(err)
+	if err := errors.CheckInit(str, s); err != nil {
+		return errors.HandelError(err)
 	}
 
 	toparse := s[1:]
@@ -29,5 +33,5 @@ func (str *Str) Parse(s string) (Data, string, error) {
 		}
 	}
 
-	return handleError(NewExpectedCharErr('"'))
+	return errors.HandelError(errors.NewExpectedCharErr('"'))
 }

@@ -4,8 +4,9 @@ import (
 	"bufio"
 	"fmt"
 	"os"
-	"strings"
 	"unicode"
+
+	"github.com/stu-k/go/parser/errors"
 )
 
 type Data interface {
@@ -52,14 +53,14 @@ func main() {
 func mainParse(input string) ([]Data, error) {
 	data := make([]Data, 0)
 
-	result, rest, err := parse(input, mainOpts, true)
+	result, rest, err := parse(input, mainOpts)
 	if err != nil {
 		return nil, err
 	}
 	data = append(data, result)
 
 	for rest != "" {
-		result, rest, err = parse(rest, mainOpts, false)
+		result, rest, err = parse(rest, mainOpts)
 		if err != nil {
 			return nil, err
 		}
@@ -69,19 +70,15 @@ func mainParse(input string) ([]Data, error) {
 	return data, nil
 }
 
-func parse(input string, opts []ParseChecker, first bool) (Data, string, error) {
-	if !first {
-		input = strings.Trim(input, " ")
-	}
-
+func parse(input string, opts []ParseChecker) (Data, string, error) {
 	fmt.Printf("\nparse: \"%v\"\n", input)
 	if len(input) == 0 {
-		return nil, "", nil
+		return nil, "", errors.NewEndOfInputErr()
 	}
 
 	r := rune(input[0])
 	if unicode.IsSpace(r) {
-		return parse(input[1:], opts, false)
+		return parse(input[1:], opts)
 	}
 
 	type result struct {
@@ -110,10 +107,8 @@ func parse(input string, opts []ParseChecker, first bool) (Data, string, error) 
 		})
 	}
 
-	if first {
-		fmt.Printf("ok results: %v\n", okResults)
-		fmt.Printf("err results: %v\n", errResults)
-	}
+	fmt.Printf("ok results: %v\n", okResults)
+	fmt.Printf("err results: %v\n", errResults)
 
 	if len(okResults) > 0 {
 		r := okResults[0]
@@ -125,5 +120,5 @@ func parse(input string, opts []ParseChecker, first bool) (Data, string, error) 
 		return r.data, r.rest, r.err
 	}
 
-	return nil, "", NewEndOfInputErr()
+	return nil, "", errors.NewUnexpectedCharErr(r)
 }

@@ -3,6 +3,8 @@ package main
 import (
 	"fmt"
 	"unicode"
+
+	"github.com/stu-k/go/parser/errors"
 )
 
 type Var struct {
@@ -17,8 +19,8 @@ func (t *Var) Check(r rune) bool {
 	return r == '_' || unicode.IsLetter(r)
 }
 func (t *Var) Parse(s string) (Data, string, error) {
-	if err := checkInit(t, s); err != nil {
-		return handleError(err)
+	if err := errors.CheckInit(t, s); err != nil {
+		return errors.HandelError(err)
 	}
 
 	var res string
@@ -34,7 +36,7 @@ func (t *Var) Parse(s string) (Data, string, error) {
 			if len(res) > 0 {
 				return &Var{res}, s[i:], nil
 			}
-			return handleError(NewUnexpectedCharErr(r))
+			return errors.HandelError(errors.NewUnexpectedCharErr(r))
 		}
 	}
 
