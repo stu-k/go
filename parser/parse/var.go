@@ -19,8 +19,8 @@ func (t *Var) Check(r rune) bool {
 	return r == '_' || unicode.IsLetter(r)
 }
 func (t *Var) Parse(s string) (Data, string, error) {
-	if err := errors.CheckInit(t, s); err != nil {
-		return errors.HandeleError(err)
+	if err := errors.CheckInit(t.Type(), s, t.Check); err != nil {
+		return errors.HandleError(err)
 	}
 
 	var res string
@@ -36,7 +36,7 @@ func (t *Var) Parse(s string) (Data, string, error) {
 			if len(res) > 0 {
 				return &Var{res}, s[i:], nil
 			}
-			return errors.HandeleError(errors.NewUnexpectedCharErr(r))
+			return errors.HandleError(errors.NewUnexpectedCharErr(r))
 		}
 	}
 

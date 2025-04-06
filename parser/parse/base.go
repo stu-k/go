@@ -7,6 +7,112 @@ import (
 	"github.com/stu-k/go/parser/errors"
 )
 
+var Alpha = &Rule{
+	Name:        "alpha",
+	Count:       -1,
+	Start:       0,
+	End:         0,
+	Check:       unicode.IsLetter,
+	IgnoreSpace: true,
+	AtLeastOne:  true,
+}
+
+type Rule struct {
+	Name        string
+	Count       int
+	Start, End  rune
+	Check       func(rune) bool
+	IgnoreSpace bool
+	AtLeastOne  bool
+}
+
+func (a *Rule) Clone() *Rule {
+	return &Rule{
+		Name:        a.Name,
+		Count:       a.Count,
+		Start:       a.Start,
+		End:         a.End,
+		Check:       a.Check,
+		IgnoreSpace: a.IgnoreSpace,
+		AtLeastOne:  a.AtLeastOne,
+	}
+}
+
+func (a *Rule) WithCount(n int) *Rule {
+	new := a.Clone()
+	new.Count = n
+	return new
+}
+
+func (a *Rule) Parse(s string) (string, string, error) {
+	useStart := a.Start != 0
+	useEnd := a.End != 0
+	useCount := a.Count >= 0
+
+	if s == "" || (useStart && rune(s[0]) != a.Start) {
+		return "", "", errors.NewBadMatchErr(a.Name, s)
+	}
+
+	toparse := s
+	if a.Start != 0 {
+		toparse = s[1:]
+	}
+
+	var result string
+	var count int
+	for i, c := range toparse {
+		r := rune(c)
+		if unicode.IsSpace(r) && a.IgnoreSpace {
+			count++
+			continue
+		}
+
+		if useCount && !useEnd {
+			if count >= a.Count {
+				return result, s[i:], nil
+			}
+		}
+
+		if !useCount && useEnd {
+			if r == a.End {
+				result += string(r)
+				return result, s[i+1:], nil
+			}
+		}
+
+		if useCount && useEnd {
+			if count == a.Count+1 {
+				if r == a.End {
+					result += string(r)
+					return result, s[i+1:], nil
+				}
+				return "", "", errors.NewBadMatchErr(a.Name, s)
+			}
+		}
+
+		ok := a.Check(r)
+		if !ok {
+			if a.AtLeastOne && result == "" {
+				return "", "", errors.NewBadMatchErr(a.Name, s)
+			}
+			return result, s[i:], nil
+		}
+
+		result += string(r)
+		count++
+	}
+
+	if useCount && count < a.Count {
+		return "", "", errors.NewBadMatchErr(a.Name, s)
+	}
+
+	if a.AtLeastOne && result == "" {
+		return "", "", errors.NewBadMatchErr(a.Name, s)
+	}
+
+	return result, s[count:], nil
+}
+
 type Data interface {
 	Type() string
 	Value() any

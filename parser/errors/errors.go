@@ -52,19 +52,31 @@ type data interface {
 	String() string
 }
 
-func HandeleError(err error) (data, string, error) {
+var ErrBadMatch = fmt.Errorf("bad match")
+
+type BadMatchErr struct {
+	name string
+	bad  string
+}
+
+func (e BadMatchErr) Error() string {
+	return fmt.Sprintf("bad match for %s: \"%s\"", e.name, e.bad)
+}
+func (e BadMatchErr) Unwrap() error { return ErrBadMatch }
+func NewBadMatchErr(name, bad string) error {
+	return BadMatchErr{name, bad}
+}
+
+func HandleError(err error) (data, string, error) {
 	return nil, "", err
 }
 
-func CheckInit(data interface {
-	Check(rune) bool
-	Type() string
-}, s string) error {
+func CheckInit(name string, s string, check func(rune) bool) error {
 	if s == "" {
-		return fmt.Errorf("%s init with \"\"", data.Type())
+		return fmt.Errorf("%s init with \"\"", name)
 	}
-	if !data.Check(rune(s[0])) {
-		return fmt.Errorf("%s init with \"%s\"", data.Type(), string(s[0]))
+	if !check(rune(s[0])) {
+		return fmt.Errorf("%s init with \"%s\"", name, string(s[0]))
 	}
 	return nil
 }

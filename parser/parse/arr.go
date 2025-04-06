@@ -22,8 +22,8 @@ func (a *Arr) String() string {
 
 func (a *Arr) Check(r rune) bool { return r == '[' }
 func (a *Arr) Parse(s string) (Data, string, error) {
-	if err := errors.CheckInit(a, s); err != nil {
-		return errors.HandeleError(err)
+	if err := errors.CheckInit(a.Type(), s, a.Check); err != nil {
+		return errors.HandleError(err)
 	}
 
 	toparse := s[1:]
@@ -37,23 +37,23 @@ func (a *Arr) Parse(s string) (Data, string, error) {
 			continue
 		case r == ']':
 			if lastWasComma {
-				return errors.HandeleError(errors.NewExpectedCharErr(']'))
+				return errors.HandleError(errors.NewExpectedCharErr(']'))
 			}
 			return &Arr{res}, toparse[i+1:], nil
 		case r == ',':
 			if len(res) == 0 {
-				return errors.HandeleError(errors.NewUnexpectedCharErr(r))
+				return errors.HandleError(errors.NewUnexpectedCharErr(r))
 			}
 			lastWasComma = true
 			continue
 		default:
 			if len(res) > 0 && !lastWasComma {
-				return errors.HandeleError(errors.NewExpectedCharErr(']'))
+				return errors.HandleError(errors.NewExpectedCharErr(']'))
 			}
 
 			data, rest, err := parse(toparse[i:], mainOpts)
 			if err != nil {
-				return errors.HandeleError(err)
+				return errors.HandleError(err)
 			}
 
 			res = append(res, data)
@@ -65,5 +65,5 @@ func (a *Arr) Parse(s string) (Data, string, error) {
 			continue
 		}
 	}
-	return errors.HandeleError(errors.NewExpectedCharErr(']'))
+	return errors.HandleError(errors.NewExpectedCharErr(']'))
 }

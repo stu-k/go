@@ -61,8 +61,8 @@ func (op Op) Check(r rune) bool {
 	return false
 }
 func (op *Op) Parse(s string) (Data, string, error) {
-	if err := errors.CheckInit(op, s); err != nil {
-		return errors.HandeleError(err)
+	if err := errors.CheckInit(op.Type(), s, op.Check); err != nil {
+		return errors.HandleError(err)
 	}
 
 	// var res string
