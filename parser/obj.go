@@ -42,27 +42,27 @@ func (o *Obj) Parse(s string) (Data, string, error) {
 		case r == '}':
 			// can't end on key or comma
 			if key != "" || isComma {
-				return handleError(NewUnexpectedCharErr("obj:close", '}'))
+				return handleError(NewUnexpectedCharErr('}'))
 			}
 			return NewObject(res), toparse[i+1:], nil
 		case r == ':':
 			// can't use colon without key
 			if key == "" {
-				return handleError(NewUnexpectedCharErr("obj:colon", ':'))
+				return handleError(NewUnexpectedCharErr(':'))
 			}
 			isColon = true
 			continue
 		case r == ',':
 			// comma comes after a complete kv set
 			if len(res) == 0 || key != "" {
-				return handleError(NewUnexpectedCharErr("obj:comma", ','))
+				return handleError(NewUnexpectedCharErr(','))
 			}
 			isComma = true
 			continue
 		default:
 			// need colon after key
 			if key != "" && !isColon {
-				return handleError(NewSingleExpectationErr(':'))
+				return handleError(NewExpectedCharErr(':'))
 			}
 
 			// parse token
@@ -75,7 +75,7 @@ func (o *Obj) Parse(s string) (Data, string, error) {
 			if key != "" {
 				// need comma between kv sets
 				if len(res) > 0 && !isComma {
-					return handleError(NewSingleExpectationErr(','))
+					return handleError(NewExpectedCharErr(','))
 				}
 				res[key] = data
 				key = ""
@@ -112,7 +112,7 @@ func (o *Obj) Parse(s string) (Data, string, error) {
 		}
 	}
 
-	return handleError(NewSingleExpectationErr('}'))
+	return handleError(NewExpectedCharErr('}'))
 }
 
 func handleSetKey(data Data) (string, error) {

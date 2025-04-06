@@ -29,5 +29,5 @@ func (str *Str) Parse(s string) (Data, string, error) {
 		}
 	}
 
-	return handleError(NewSingleExpectationErr('"'))
+	return handleError(NewExpectedCharErr('"'))
 }

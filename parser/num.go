@@ -49,7 +49,7 @@ func (n *Num) Parse(s string) (Data, string, error) {
 				}
 				return num, s[i:], nil
 			}
-			return handleError(NewUnexpectedCharErr("num:default", r))
+			return handleError(NewUnexpectedCharErr(r))
 		}
 	}
 

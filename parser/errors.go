@@ -2,21 +2,48 @@ package main
 
 import "fmt"
 
-type ParseError struct{ msg string }
+var ErrUnexpectedChar = fmt.Errorf("unexpected char")
 
-func (p ParseError) Error() string {
-	return p.msg
-}
-func NewUnexpectedCharErr(which string, char rune) ParseError {
-	return ParseError{fmt.Sprintf("unexpected char in [%s]: \"%s\"", which, string(char))}
+type UnexpectedCharErr struct {
+	char rune
 }
 
-func NewExpectationErr(got rune, want rune) ParseError {
-	return ParseError{fmt.Sprintf("expected \"%s\"; got \"%s\"", string(got), string(want))}
+func (e UnexpectedCharErr) Error() string {
+	return fmt.Sprintf("unexpected char \"%s\"", string(e.char))
+}
+func (e UnexpectedCharErr) Unwrap() error { return ErrUnexpectedChar }
+func NewUnexpectedCharErr(char rune) error {
+	return UnexpectedCharErr{char}
 }
 
-func NewSingleExpectationErr(want rune) ParseError {
-	return ParseError{fmt.Sprintf("expected \"%s\"", string(want))}
+var ErrExpectedChar = fmt.Errorf("expected vhar")
+
+type ExpectedCharErr struct {
+	char rune
+}
+
+func NewExpectedCharErr(char rune) error {
+	return ExpectedCharErr{char}
+}
+
+func (e ExpectedCharErr) Error() string {
+	return fmt.Sprintf("expected \"%s\"", string(e.char))
+}
+
+func (e ExpectedCharErr) Unwrap() error {
+	return ErrExpectedChar
+}
+
+var ErrEndOfInput = fmt.Errorf("end of input")
+
+type EndOfInputErr struct{}
+
+func (e EndOfInputErr) Error() string {
+	return ErrEndOfInput.Error()
+}
+func (e EndOfInputErr) Unwrap() error { return ErrEndOfInput }
+func NewEndOfInputErr() error {
+	return EndOfInputErr{}
 }
 
 func handleError(err error) (Data, string, error) {

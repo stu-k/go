@@ -34,7 +34,7 @@ func (t *Var) Parse(s string) (Data, string, error) {
 			if len(res) > 0 {
 				return &Var{res}, s[i:], nil
 			}
-			return handleError(NewUnexpectedCharErr("var:default", r))
+			return handleError(NewUnexpectedCharErr(r))
 		}
 	}
 

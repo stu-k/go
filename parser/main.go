@@ -125,5 +125,5 @@ func parse(input string, opts []ParseChecker, first bool) (Data, string, error) 
 		return r.data, r.rest, r.err
 	}
 
-	return nil, "", NewUnexpectedCharErr("initial:default", r)
+	return nil, "", NewEndOfInputErr()
 }

@@ -35,18 +35,18 @@ func (a *Arr) Parse(s string) (Data, string, error) {
 			continue
 		case r == ']':
 			if lastWasComma {
-				return handleError(NewExpectationErr(']', ','))
+				return handleError(NewExpectedCharErr(']'))
 			}
 			return &Arr{res}, toparse[i+1:], nil
 		case r == ',':
 			if len(res) == 0 {
-				return handleError(NewUnexpectedCharErr("arr:comma", r))
+				return handleError(NewUnexpectedCharErr(r))
 			}
 			lastWasComma = true
 			continue
 		default:
 			if len(res) > 0 && !lastWasComma {
-				return handleError(NewSingleExpectationErr(']'))
+				return handleError(NewExpectedCharErr(']'))
 			}
 
 			data, rest, err := parse(toparse[i:], mainOpts, false)
@@ -63,5 +63,5 @@ func (a *Arr) Parse(s string) (Data, string, error) {
 			continue
 		}
 	}
-	return handleError(NewExpectationErr(']', ' '))
+	return handleError(NewExpectedCharErr(']'))
 }

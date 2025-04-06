@@ -39,14 +39,14 @@ func (p *Paren) Parse(s string) (Data, string, error) {
 			if len(res) == 1 {
 				return NewParen(res), toparse[i+1:], nil
 			}
-			return handleError(NewUnexpectedCharErr("parens:close", ')'))
+			return handleError(NewUnexpectedCharErr(')'))
 		default:
 			data, rest, err := parse(toparse[i:], mainOpts, false)
 			if err != nil {
 				return handleError(err)
 			}
 			if len(res) > 0 {
-				return handleError(NewUnexpectedCharErr("parens:default", rune(toparse[i])))
+				return handleError(NewUnexpectedCharErr(rune(toparse[i])))
 			}
 			res = append(res, data)
 			if len(rest) > 0 {
@@ -54,9 +54,9 @@ func (p *Paren) Parse(s string) (Data, string, error) {
 				i = -1
 				continue
 			}
-			return handleError(NewExpectationErr(')', ' '))
+			return handleError(NewExpectedCharErr(')'))
 		}
 	}
 
-	return handleError(NewExpectationErr(')', ' '))
+	return handleError(NewExpectedCharErr(')'))
 }
