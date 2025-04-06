@@ -34,15 +34,15 @@ var opMap = map[string]anyfn{
 
 func opMult(d ...Data) (Data, error) { return nil, nil }
 
-func parseOp(input string) (Data, string, error) {
-	if input == "" {
+func parseOp(s string) (Data, string, error) {
+	if s == "" {
 		panic(fmt.Errorf("op init with \"\""))
-	} else if !isOp(string(input[0])) {
-		panic(fmt.Errorf("op init with \"%s\"", string(input[0])))
+	} else if !isOp(string(s[0])) {
+		panic(fmt.Errorf("op init with \"%s\"", string(s[0])))
 	}
 
 	// sofar := string(input[0])
-	for i := 0; i < len(input); i++ {
+	for i := 0; i < len(s); i++ {
 
 	}
 

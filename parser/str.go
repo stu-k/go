@@ -9,15 +9,14 @@ func (s Str) Type() string   { return "str" }
 func (s Str) Value() any     { return s.val }
 func (s Str) String() string { return fmt.Sprintf("str:\"%s\"", s.val) }
 
-func isStr(r rune) bool { return r == '"' }
-func parseString(input string) (Data, string, error) {
-	if input == "" {
-		panic(fmt.Errorf("str init with \"\""))
-	} else if input[0] != '"' {
-		panic(fmt.Errorf("str init with \"%s\"", string(input[0])))
+func (s Str) Check(r rune) bool { return r == '"' }
+func (str Str) Parse(s string) (Data, string, error) {
+	if err := checkInit(str, s); err != nil {
+		panic(err)
 	}
 
-	toparse := input[1:]
+	toparse := s[1:]
+
 	var sofar string
 	for i := 0; i < len(toparse); i++ {
 		r := rune(toparse[i])

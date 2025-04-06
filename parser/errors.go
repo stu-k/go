@@ -22,3 +22,16 @@ func NewSingleExpectationErr(want rune) ParseError {
 func handleError(err error) (Data, string, error) {
 	return DataUnknown{}, "", err
 }
+
+func checkInit(data interface {
+	Check(rune) bool
+	Type() string
+}, s string) error {
+	if s == "" {
+		return fmt.Errorf("%s init with \"\"", data.Type())
+	}
+	if !data.Check(rune(s[0])) {
+		return fmt.Errorf("%s init with \"%s\"", data.Type(), string(s[0]))
+	}
+	return nil
+}

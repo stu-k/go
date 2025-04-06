@@ -21,15 +21,13 @@ func (p Paren) String() string {
 	return sofar
 }
 
-func isParen(r rune) bool { return r == '(' }
-func parseParen(input string) (Data, string, error) {
-	if input == "" {
-		panic(fmt.Errorf("paren init with: \"\""))
-	} else if input[0] != '(' {
-		panic(fmt.Errorf("paren init with: \"%s\"", string(input[0])))
+func (p Paren) Check(r rune) bool { return r == '(' }
+func (p Paren) Parse(s string) (Data, string, error) {
+	if err := checkInit(p, s); err != nil {
+		panic(err)
 	}
 
-	toparse := input[1:]
+	toparse := s[1:]
 
 	parsed := make([]Data, 0)
 	for i := 0; i < len(toparse); i++ {

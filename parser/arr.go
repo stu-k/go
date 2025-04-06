@@ -18,17 +18,15 @@ func (a Arr) String() string {
 	return sofar
 }
 
-func isArr(r rune) bool { return r == '[' }
-func parseArr(input string) (Data, string, error) {
-	if input == "" {
-		panic(fmt.Errorf("arr init with: \"\""))
-	} else if input[0] != '[' {
-		panic(fmt.Errorf("arr init with: \"%s\"", string(input[0])))
+func (a Arr) Check(r rune) bool { return r == '[' }
+func (a Arr) Parse(s string) (Data, string, error) {
+	if err := checkInit(a, s); err != nil {
+		panic(err)
 	}
 
 	parsed := make([]Data, 0)
 	lastWasComma := false
-	toparse := input[1:]
+	toparse := s[1:]
 
 	for i := 0; i < len(toparse); i++ {
 		r := rune(toparse[i])

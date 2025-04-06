@@ -21,15 +21,14 @@ func (o Obj) String() string {
 	return sofar + " }"
 }
 
-func isObj(r rune) bool { return r == '{' }
-func parseObj(input string) (Data, string, error) {
-	if input == "" {
-		panic(fmt.Errorf("obj init with: \"\""))
-	} else if input[0] != '{' {
-		panic(fmt.Errorf("obj init with: \"%s\"", string(input[0])))
+func (o Obj) Check(r rune) bool { return r == '{' }
+func (o Obj) Parse(s string) (Data, string, error) {
+	if err := checkInit(o, s); err != nil {
+		panic(err)
 	}
 
-	toparse := input[1:]
+	toparse := s[1:]
+
 	parsed := make(map[string]Data)
 	var key string
 	isColon := false
