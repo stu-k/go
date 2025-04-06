@@ -7,9 +7,9 @@ import (
 
 type Arr struct{ val []Data }
 
-func (a Arr) Type() string { return "arr" }
-func (a Arr) Value() any   { return a.val }
-func (a Arr) String() string {
+func (a *Arr) Type() string { return "arr" }
+func (a *Arr) Value() any   { return a.val }
+func (a *Arr) String() string {
 	sofar := "arr:["
 	for _, d := range a.val {
 		sofar += fmt.Sprintf(" %v", d)
@@ -18,8 +18,8 @@ func (a Arr) String() string {
 	return sofar
 }
 
-func (a Arr) Check(r rune) bool { return r == '[' }
-func (a Arr) Parse(s string) (Data, string, error) {
+func (a *Arr) Check(r rune) bool { return r == '[' }
+func (a *Arr) Parse(s string) (Data, string, error) {
 	if err := checkInit(a, s); err != nil {
 		panic(err)
 	}
@@ -37,7 +37,7 @@ func (a Arr) Parse(s string) (Data, string, error) {
 			if lastWasComma {
 				return handleError(NewExpectationErr(']', ','))
 			}
-			return Arr{res}, toparse[i+1:], nil
+			return &Arr{res}, toparse[i+1:], nil
 		case r == ',':
 			if len(res) == 0 {
 				return handleError(NewUnexpectedCharErr("arr:comma", r))

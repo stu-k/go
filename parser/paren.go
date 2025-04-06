@@ -7,12 +7,12 @@ import (
 
 type Paren struct{ val []Data }
 
-func NewParen(c []Data) Paren {
-	return Paren{c}
+func NewParen(c []Data) *Paren {
+	return &Paren{c}
 }
-func (p Paren) Type() string { return "paren" }
-func (p Paren) Value() any   { return p.val }
-func (p Paren) String() string {
+func (p *Paren) Type() string { return "paren" }
+func (p *Paren) Value() any   { return p.val }
+func (p *Paren) String() string {
 	sofar := "paren:("
 	for _, d := range p.val {
 		sofar += fmt.Sprintf(" %v", d)
@@ -21,8 +21,8 @@ func (p Paren) String() string {
 	return sofar
 }
 
-func (p Paren) Check(r rune) bool { return r == '(' }
-func (p Paren) Parse(s string) (Data, string, error) {
+func (p *Paren) Check(r rune) bool { return r == '(' }
+func (p *Paren) Parse(s string) (Data, string, error) {
 	if err := checkInit(p, s); err != nil {
 		panic(err)
 	}

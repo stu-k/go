@@ -7,13 +7,13 @@ import (
 
 type Obj struct{ val map[string]Data }
 
-func NewObject(val map[string]Data) Obj {
-	return Obj{val}
+func NewObject(val map[string]Data) *Obj {
+	return &Obj{val}
 }
 
-func (o Obj) Type() string { return "object" }
-func (o Obj) Value() any   { return o.val }
-func (o Obj) String() string {
+func (o *Obj) Type() string { return "object" }
+func (o *Obj) Value() any   { return o.val }
+func (o *Obj) String() string {
 	sofar := "obj:{"
 	for k, v := range o.val {
 		sofar += fmt.Sprintf(" %s: %v", k, v)
@@ -21,8 +21,8 @@ func (o Obj) String() string {
 	return sofar + " }"
 }
 
-func (o Obj) Check(r rune) bool { return r == '{' }
-func (o Obj) Parse(s string) (Data, string, error) {
+func (o *Obj) Check(r rune) bool { return r == '{' }
+func (o *Obj) Parse(s string) (Data, string, error) {
 	if err := checkInit(o, s); err != nil {
 		panic(err)
 	}

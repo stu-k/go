@@ -14,12 +14,6 @@ type Data interface {
 	String() string
 }
 
-type DataUnknown struct{}
-
-func (d DataUnknown) Type() string   { return "unknown" }
-func (d DataUnknown) String() string { return "unknown" }
-func (d DataUnknown) Value() any     { return nil }
-
 func main() {
 	scanner := bufio.NewScanner(os.Stdin)
 	for {
@@ -76,21 +70,21 @@ func parse(input string, first bool) (Data, string, error) {
 	}
 
 	switch {
-	case Var{}.Check(r):
-		return Var{}.Parse(input)
-	case Num{}.Check(r):
-		return Num{}.Parse(input)
-	case Obj{}.Check(r):
-		return Obj{}.Parse(input)
-	case Arr{}.Check(r):
-		return Arr{}.Parse(input)
-	case Str{}.Check(r):
-		return Str{}.Parse(input)
-	case Paren{}.Check(r):
-		return Paren{}.Parse(input)
-	case Op{}.Check(r):
-		return Op{}.Parse(input)
+	case (&Var{}).Check(r):
+		return (&Var{}).Parse(input)
+	case (&Num{}).Check(r):
+		return (&Num{}).Parse(input)
+	case (&Obj{}).Check(r):
+		return (&Obj{}).Parse(input)
+	case (&Arr{}).Check(r):
+		return (&Arr{}).Parse(input)
+	case (&Str{}).Check(r):
+		return (&Str{}).Parse(input)
+	case (&Paren{}).Check(r):
+		return (&Paren{}).Parse(input)
+	case (&Op{}).Check(r):
+		return (&Op{}).Parse(input)
 	default:
-		return DataUnknown{}, "", NewUnexpectedCharErr("initial:default", r)
+		return nil, "", NewUnexpectedCharErr("initial:default", r)
 	}
 }

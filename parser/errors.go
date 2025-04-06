@@ -20,7 +20,7 @@ func NewSingleExpectationErr(want rune) ParseError {
 }
 
 func handleError(err error) (Data, string, error) {
-	return DataUnknown{}, "", err
+	return nil, "", err
 }
 
 func checkInit(data interface {

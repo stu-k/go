@@ -4,13 +4,13 @@ import "fmt"
 
 type Str struct{ val string }
 
-func NewStr(s string) Str    { return Str{s} }
-func (s Str) Type() string   { return "str" }
-func (s Str) Value() any     { return s.val }
-func (s Str) String() string { return fmt.Sprintf("str:\"%s\"", s.val) }
+func NewStr(s string) *Str    { return &Str{s} }
+func (s *Str) Type() string   { return "str" }
+func (s *Str) Value() any     { return s.val }
+func (s *Str) String() string { return fmt.Sprintf("str:\"%s\"", s.val) }
 
-func (s Str) Check(r rune) bool { return r == '"' }
-func (str Str) Parse(s string) (Data, string, error) {
+func (s *Str) Check(r rune) bool { return r == '"' }
+func (str *Str) Parse(s string) (Data, string, error) {
 	if err := checkInit(str, s); err != nil {
 		panic(err)
 	}

@@ -8,20 +8,20 @@ import (
 
 type Num struct{ val int }
 
-func NewNum(s string) (Num, error) {
+func NewNum(s string) (*Num, error) {
 	n, err := strconv.Atoi(s)
 	if err != nil {
-		return Num{}, fmt.Errorf("invalid num: %s", s)
+		return nil, fmt.Errorf("invalid num: %s", s)
 	}
-	return Num{n}, nil
+	return &Num{n}, nil
 }
 
-func (n Num) Type() string   { return "num" }
-func (n Num) Value() any     { return n.val }
-func (n Num) String() string { return fmt.Sprintf("num:%d", n.val) }
+func (n *Num) Type() string   { return "num" }
+func (n *Num) Value() any     { return n.val }
+func (n *Num) String() string { return fmt.Sprintf("num:%d", n.val) }
 
-func (n Num) Check(r rune) bool { return unicode.IsDigit(r) }
-func (n Num) Parse(s string) (Data, string, error) {
+func (n *Num) Check(r rune) bool { return unicode.IsDigit(r) }
+func (n *Num) Parse(s string) (Data, string, error) {
 	if err := checkInit(n, s); err != nil {
 		panic(err)
 	}
@@ -57,5 +57,5 @@ func (n Num) Parse(s string) (Data, string, error) {
 	if err != nil {
 		return handleError(fmt.Errorf("invalid num: %s", res))
 	}
-	return Num{num}, "", nil
+	return &Num{num}, "", nil
 }
