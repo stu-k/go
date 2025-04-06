@@ -7,8 +7,8 @@ type ParseError struct{ msg string }
 func (p ParseError) Error() string {
 	return p.msg
 }
-func NewUnexpectedTokenErr(which string, token rune) ParseError {
-	return ParseError{fmt.Sprintf("unexpected token in [%s]: %s", which, string(token))}
+func NewUnexpectedCharErr(which string, char rune) ParseError {
+	return ParseError{fmt.Sprintf("unexpected char in [%s]: %s", which, string(char))}
 }
 
 func NewExpectationErr(got rune, want rune) ParseError {

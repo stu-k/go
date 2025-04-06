@@ -17,14 +17,14 @@ func (str Str) Parse(s string) (Data, string, error) {
 
 	toparse := s[1:]
 
-	var sofar string
+	var res string
 	for i := 0; i < len(toparse); i++ {
 		r := rune(toparse[i])
 		switch {
 		case r == '"':
-			return NewStr(sofar), toparse[i+1:], nil
+			return NewStr(res), toparse[i+1:], nil
 		default:
-			sofar += string(r)
+			res += string(r)
 			continue
 		}
 	}

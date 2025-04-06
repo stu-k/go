@@ -26,36 +26,36 @@ func (n Num) Parse(s string) (Data, string, error) {
 		panic(err)
 	}
 
-	var sofar string
+	var res string
 	for i, r := range s {
 		switch {
 		case n.Check(r):
-			sofar += string(r)
+			res += string(r)
 			continue
 		case unicode.IsSpace(r):
-			if sofar == "" {
+			if res == "" {
 				return handleError(fmt.Errorf("empty num"))
 			}
-			num, err := NewNum(sofar)
+			num, err := NewNum(res)
 			if err != nil {
-				return handleError(fmt.Errorf("invalid num: %s", sofar))
+				return handleError(fmt.Errorf("invalid num: %s", res))
 			}
 			return num, s[i:], nil
 		default:
-			if len(sofar) > 0 {
-				num, err := NewNum(sofar)
+			if len(res) > 0 {
+				num, err := NewNum(res)
 				if err != nil {
 					return handleError(err)
 				}
 				return num, s[i:], nil
 			}
-			return handleError(NewUnexpectedTokenErr("num:default", r))
+			return handleError(NewUnexpectedCharErr("num:default", r))
 		}
 	}
 
-	num, err := strconv.Atoi(sofar)
+	num, err := strconv.Atoi(res)
 	if err != nil {
-		return handleError(fmt.Errorf("invalid num: %s", sofar))
+		return handleError(fmt.Errorf("invalid num: %s", res))
 	}
 	return Num{num}, "", nil
 }

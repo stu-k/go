@@ -2,49 +2,63 @@ package main
 
 import (
 	"fmt"
-	"strings"
 )
 
 type anyfn func(...Data) (Data, error)
 
 type Op struct {
-	val string
-	fn  anyfn
-	air int
+	val  string
+	fn   anyfn
+	args []Data
+	air  uint
 }
 
-func NewOp(v string, fn anyfn, air int) Op { return Op{v, fn, air} }
-func (o Op) Type() string                  { return "op" }
-func (o Op) Value() any                    { return o.val }
-func (o Op) String() string                { return fmt.Sprintf("op:%s", o.val) }
-func (o Op) Exec(d ...Data) (Data, error)  { return o.fn(d...) }
+func NewOp(val string, fn anyfn, args []Data, air uint) Op {
+	return Op{val, fn, args, air}
+}
+func (o Op) Type() string   { return "op" }
+func (o Op) Value() any     { return o.val }
+func (o Op) String() string { return fmt.Sprintf("op:\"%s[%d]\"", o.val, o.air) }
 
-func isOp(s string) bool {
-	for k, _ := range opMap {
-		if strings.HasPrefix(k, s) {
-			return true
-		}
-	}
-	return false
+var noop = func(d ...Data) (Data, error) {
+	return nil, nil
 }
 
-var opMap = map[string]anyfn{
-	"*m*": opMult,
+var opMap = map[rune]anyfn{
+	'~':  noop,
+	'!':  noop,
+	'@':  noop,
+	'#':  noop,
+	'$':  noop,
+	'%':  noop,
+	'^':  noop,
+	'&':  noop,
+	'*':  noop,
+	'-':  noop,
+	'+':  noop,
+	'=':  noop,
+	'|':  noop,
+	'\\': noop,
+	'<':  noop,
+	'>':  noop,
+	'.':  noop,
+	'?':  noop,
+	'/':  noop,
 }
 
-func opMult(d ...Data) (Data, error) { return nil, nil }
-
-func parseOp(s string) (Data, string, error) {
-	if s == "" {
-		panic(fmt.Errorf("op init with \"\""))
-	} else if !isOp(string(s[0])) {
-		panic(fmt.Errorf("op init with \"%s\"", string(s[0])))
+func (s Op) Check(r rune) bool {
+	_, ok := opMap[r]
+	return ok
+}
+func (op Op) Parse(s string) (Data, string, error) {
+	if err := checkInit(op, s); err != nil {
+		panic(err)
 	}
 
-	// sofar := string(input[0])
-	for i := 0; i < len(s); i++ {
-
+	fn, ok := opMap[rune(s[0])]
+	if !ok {
+		panic(fmt.Errorf("no op found for rune %s", string(s[0])))
 	}
 
-	return nil, "", nil
+	return NewOp(string(s[0]), fn, []Data{}, 2), s[1:], nil
 }

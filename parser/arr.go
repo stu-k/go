@@ -24,10 +24,10 @@ func (a Arr) Parse(s string) (Data, string, error) {
 		panic(err)
 	}
 
-	parsed := make([]Data, 0)
-	lastWasComma := false
 	toparse := s[1:]
+	res := make([]Data, 0)
 
+	lastWasComma := false
 	for i := 0; i < len(toparse); i++ {
 		r := rune(toparse[i])
 		switch {
@@ -37,15 +37,15 @@ func (a Arr) Parse(s string) (Data, string, error) {
 			if lastWasComma {
 				return handleError(NewExpectationErr(']', ','))
 			}
-			return Arr{parsed}, toparse[i+1:], nil
+			return Arr{res}, toparse[i+1:], nil
 		case r == ',':
-			if len(parsed) == 0 {
-				return handleError(NewUnexpectedTokenErr("arr:comma", r))
+			if len(res) == 0 {
+				return handleError(NewUnexpectedCharErr("arr:comma", r))
 			}
 			lastWasComma = true
 			continue
 		default:
-			if len(parsed) > 0 && !lastWasComma {
+			if len(res) > 0 && !lastWasComma {
 				return handleError(NewSingleExpectationErr(']'))
 			}
 
@@ -54,7 +54,7 @@ func (a Arr) Parse(s string) (Data, string, error) {
 				return handleError(err)
 			}
 
-			parsed = append(parsed, data)
+			res = append(res, data)
 			if rest != "" {
 				toparse = rest
 				i = -1

@@ -71,31 +71,26 @@ func parse(input string, first bool) (Data, string, error) {
 	}
 
 	r := rune(input[0])
-	switch {
-	case unicode.IsSpace(r):
+	if unicode.IsSpace(r) {
 		return parse(input[1:], false)
-	case Token{}.Check(r):
-		fmt.Printf("is token: %s\n", input)
-		return Token{}.Parse(input)
+	}
+
+	switch {
+	case Var{}.Check(r):
+		return Var{}.Parse(input)
 	case Num{}.Check(r):
-		fmt.Printf("is num: %s\n", input)
 		return Num{}.Parse(input)
 	case Obj{}.Check(r):
-		fmt.Printf("is obj: %s\n", input)
 		return Obj{}.Parse(input)
 	case Arr{}.Check(r):
-		fmt.Printf("is arr: %s\n", input)
 		return Arr{}.Parse(input)
 	case Str{}.Check(r):
-		fmt.Printf("is str: %s\n", input)
 		return Str{}.Parse(input)
 	case Paren{}.Check(r):
-		fmt.Printf("is paren: %s\n", input)
 		return Paren{}.Parse(input)
-	// case isOp(string(r)):
-	// 	fmt.Printf("is op: %s\n", input)
-	// 	return parseOp(input)
+	case Op{}.Check(r):
+		return Op{}.Parse(input)
 	default:
-		return DataUnknown{}, "", NewUnexpectedTokenErr("initial:default", r)
+		return DataUnknown{}, "", NewUnexpectedCharErr("initial:default", r)
 	}
 }

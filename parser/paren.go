@@ -29,26 +29,26 @@ func (p Paren) Parse(s string) (Data, string, error) {
 
 	toparse := s[1:]
 
-	parsed := make([]Data, 0)
+	res := make([]Data, 0)
 	for i := 0; i < len(toparse); i++ {
 		r := rune(toparse[i])
 		switch {
 		case unicode.IsSpace(r):
 			continue
 		case r == ')':
-			if len(parsed) == 1 {
-				return NewParen(parsed), toparse[i+1:], nil
+			if len(res) == 1 {
+				return NewParen(res), toparse[i+1:], nil
 			}
-			return handleError(NewUnexpectedTokenErr("parens:close", ')'))
+			return handleError(NewUnexpectedCharErr("parens:close", ')'))
 		default:
 			data, rest, err := parse(toparse[i:], false)
 			if err != nil {
 				return handleError(err)
 			}
-			if len(parsed) > 0 {
-				return handleError(NewUnexpectedTokenErr("parens:default", rune(toparse[i])))
+			if len(res) > 0 {
+				return handleError(NewUnexpectedCharErr("parens:default", rune(toparse[i])))
 			}
-			parsed = append(parsed, data)
+			res = append(res, data)
 			if len(rest) > 0 {
 				toparse = rest
 				i = -1
