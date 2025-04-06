@@ -21,7 +21,7 @@ func (a *Arr) String() string {
 func (a *Arr) Check(r rune) bool { return r == '[' }
 func (a *Arr) Parse(s string) (Data, string, error) {
 	if err := checkInit(a, s); err != nil {
-		panic(err)
+		return handleError(err)
 	}
 
 	toparse := s[1:]

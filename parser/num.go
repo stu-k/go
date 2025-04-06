@@ -23,7 +23,7 @@ func (n *Num) String() string { return fmt.Sprintf("num:%d", n.val) }
 func (n *Num) Check(r rune) bool { return unicode.IsDigit(r) }
 func (n *Num) Parse(s string) (Data, string, error) {
 	if err := checkInit(n, s); err != nil {
-		panic(err)
+		return handleError(err)
 	}
 
 	var res string

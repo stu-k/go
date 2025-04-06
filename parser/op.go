@@ -60,7 +60,7 @@ func (op Op) Check(r rune) bool {
 }
 func (op *Op) Parse(s string) (Data, string, error) {
 	if err := checkInit(op, s); err != nil {
-		panic(err)
+		return handleError(err)
 	}
 
 	// var res string

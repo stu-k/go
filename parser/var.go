@@ -18,7 +18,7 @@ func (t *Var) Check(r rune) bool {
 }
 func (t *Var) Parse(s string) (Data, string, error) {
 	if err := checkInit(t, s); err != nil {
-		panic(err)
+		return handleError(err)
 	}
 
 	var res string

@@ -24,7 +24,7 @@ func (p *Paren) String() string {
 func (p *Paren) Check(r rune) bool { return r == '(' }
 func (p *Paren) Parse(s string) (Data, string, error) {
 	if err := checkInit(p, s); err != nil {
-		panic(err)
+		return handleError(err)
 	}
 
 	toparse := s[1:]

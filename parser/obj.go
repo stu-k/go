@@ -24,7 +24,7 @@ func (o *Obj) String() string {
 func (o *Obj) Check(r rune) bool { return r == '{' }
 func (o *Obj) Parse(s string) (Data, string, error) {
 	if err := checkInit(o, s); err != nil {
-		panic(err)
+		return handleError(err)
 	}
 
 	toparse := s[1:]

@@ -12,7 +12,7 @@ func (s *Str) String() string { return fmt.Sprintf("str:\"%s\"", s.val) }
 func (s *Str) Check(r rune) bool { return r == '"' }
 func (str *Str) Parse(s string) (Data, string, error) {
 	if err := checkInit(str, s); err != nil {
-		panic(err)
+		return handleError(err)
 	}
 
 	toparse := s[1:]
