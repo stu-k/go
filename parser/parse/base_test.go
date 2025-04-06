@@ -44,4 +44,50 @@ func TestAlpha(t *testing.T) {
 			}
 		}
 	})
+
+	rule = parse.Alpha.WithCount(3)
+	t.Run("count 3", func(t *testing.T) {
+		tt := []struct {
+			in   string
+			want string
+			rest string
+			err  error
+		}{
+			{"abc", "abc", "", nil},
+			{"abcd", "abc", "d", nil},
+			{"abc.", "abc", ".", nil},
+
+			{"a", "", "", errs.ErrBadMatch},
+			{"ab", "", "", errs.ErrBadMatch},
+
+			{"abc ", "abc", "", nil},
+			{"   abc ", "abc", "", nil},
+			{"   abcd", "abc", "d", nil},
+			{"   a    b c  d", "abc", "d", nil},
+
+			{".a", "", "", errs.ErrBadMatch},
+			{"a.", "", "", errs.ErrBadMatch},
+			{".ab", "", "", errs.ErrBadMatch},
+			{"ab.", "", "", errs.ErrBadMatch},
+			{"a.b", "", "", errs.ErrBadMatch},
+
+			{".", "", "", errs.ErrBadMatch},
+			{"", "", "", errs.ErrBadMatch},
+		}
+
+		for _, test := range tt {
+			got, rest, err := rule.Parse(test.in)
+			if !errors.Is(err, test.err) {
+				t.Errorf("for \"%v\" expected error \"%v\"; got \"%v\"", test.in, test.err, err)
+			}
+
+			if got != test.want {
+				t.Errorf("for \"%v\" expected output \"%v\"; got \"%v\"", test.in, test.want, got)
+			}
+
+			if rest != test.rest {
+				t.Errorf("for \"%v\" expected remainder \"%v\"; got \"%v\"", test.in, test.rest, rest)
+			}
+		}
+	})
 }

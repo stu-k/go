@@ -60,15 +60,22 @@ func (a *Rule) Parse(s string) (string, string, error) {
 
 	var result string
 	var count int
+	var ignoredSpaces int
 	for i, c := range toparse {
 		r := rune(c)
 		if unicode.IsSpace(r) && a.IgnoreSpace {
 			count++
+			ignoredSpaces++
 			continue
 		}
 
+		countToUse := count
+		if a.IgnoreSpace {
+			countToUse -= ignoredSpaces
+		}
+
 		if useCount && !useEnd {
-			if count >= a.Count {
+			if countToUse >= a.Count {
 				return result, s[i:], nil
 			}
 		}
@@ -81,7 +88,7 @@ func (a *Rule) Parse(s string) (string, string, error) {
 		}
 
 		if useCount && useEnd {
-			if count == a.Count+1 {
+			if countToUse == a.Count+1 {
 				if r == a.End {
 					result += string(r)
 					return result, s[i+1:], nil
@@ -95,6 +102,11 @@ func (a *Rule) Parse(s string) (string, string, error) {
 			if a.AtLeastOne && result == "" {
 				return "", "", errors.NewBadMatchErr(a.Name, s)
 			}
+
+			if useCount && countToUse < a.Count {
+				return "", "", errors.NewBadMatchErr(a.Name, s)
+			}
+
 			return result, s[i:], nil
 		}
 
