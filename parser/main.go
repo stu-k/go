@@ -126,23 +126,4 @@ func parse(input string, opts []ParseChecker, first bool) (Data, string, error) 
 	}
 
 	return nil, "", NewUnexpectedCharErr("initial:default", r)
-
-	// switch {
-	// case (&Var{}).Check(r):
-	// 	return (&Var{}).Parse(input)
-	// case (&Num{}).Check(r):
-	// 	return (&Num{}).Parse(input)
-	// case (&Obj{}).Check(r):
-	// 	return (&Obj{}).Parse(input)
-	// case (&Arr{}).Check(r):
-	// 	return (&Arr{}).Parse(input)
-	// case (&Str{}).Check(r):
-	// 	return (&Str{}).Parse(input)
-	// case (&Paren{}).Check(r):
-	// 	return (&Paren{}).Parse(input)
-	// case (&Op{}).Check(r):
-	// 	return (&Op{}).Parse(input)
-	// default:
-	// 	return nil, "", NewUnexpectedCharErr("initial:default", r)
-	// }
 }
