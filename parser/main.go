@@ -14,6 +14,21 @@ type Data interface {
 	String() string
 }
 
+type ParseChecker interface {
+	Parse(s string) (Data, string, error)
+	Check(r rune) bool
+}
+
+var mainOpts = []ParseChecker{
+	&Var{},
+	&Num{},
+	&Obj{},
+	&Arr{},
+	&Str{},
+	&Paren{},
+	&Op{},
+}
+
 func main() {
 	scanner := bufio.NewScanner(os.Stdin)
 	for {
@@ -30,21 +45,21 @@ func main() {
 			continue
 		}
 
-		fmt.Printf("result: \"%+v\"\n", result)
+		fmt.Printf("result: %+v\n", result)
 	}
 }
 
 func mainParse(input string) ([]Data, error) {
 	data := make([]Data, 0)
 
-	result, rest, err := parse(input, true)
+	result, rest, err := parse(input, mainOpts, true)
 	if err != nil {
 		return nil, err
 	}
 	data = append(data, result)
 
 	for rest != "" {
-		result, rest, err = parse(rest, false)
+		result, rest, err = parse(rest, mainOpts, false)
 		if err != nil {
 			return nil, err
 		}
@@ -54,7 +69,7 @@ func mainParse(input string) ([]Data, error) {
 	return data, nil
 }
 
-func parse(input string, first bool) (Data, string, error) {
+func parse(input string, opts []ParseChecker, first bool) (Data, string, error) {
 	if !first {
 		input = strings.Trim(input, " ")
 	}
@@ -66,25 +81,68 @@ func parse(input string, first bool) (Data, string, error) {
 
 	r := rune(input[0])
 	if unicode.IsSpace(r) {
-		return parse(input[1:], false)
+		return parse(input[1:], opts, false)
 	}
 
-	switch {
-	case (&Var{}).Check(r):
-		return (&Var{}).Parse(input)
-	case (&Num{}).Check(r):
-		return (&Num{}).Parse(input)
-	case (&Obj{}).Check(r):
-		return (&Obj{}).Parse(input)
-	case (&Arr{}).Check(r):
-		return (&Arr{}).Parse(input)
-	case (&Str{}).Check(r):
-		return (&Str{}).Parse(input)
-	case (&Paren{}).Check(r):
-		return (&Paren{}).Parse(input)
-	case (&Op{}).Check(r):
-		return (&Op{}).Parse(input)
-	default:
-		return nil, "", NewUnexpectedCharErr("initial:default", r)
+	type result struct {
+		data Data
+		rest string
+		err  error
 	}
+
+	var okResults []result
+	var errResults []result
+	for _, opt := range mainOpts {
+		ok := opt.Check(r)
+		if !ok {
+			continue
+		}
+
+		res, rest, err := opt.Parse(input)
+		if err != nil {
+			errResults = append(okResults, result{
+				res, rest, err,
+			})
+			continue
+		}
+		okResults = append(okResults, result{
+			res, rest, err,
+		})
+	}
+
+	if first {
+		fmt.Printf("ok results: %v\n", okResults)
+		fmt.Printf("err results: %v\n", errResults)
+	}
+
+	if len(okResults) > 0 {
+		r := okResults[0]
+		return r.data, r.rest, r.err
+	}
+
+	if len(errResults) > 0 {
+		r := errResults[0]
+		return r.data, r.rest, r.err
+	}
+
+	return nil, "", NewUnexpectedCharErr("initial:default", r)
+
+	// switch {
+	// case (&Var{}).Check(r):
+	// 	return (&Var{}).Parse(input)
+	// case (&Num{}).Check(r):
+	// 	return (&Num{}).Parse(input)
+	// case (&Obj{}).Check(r):
+	// 	return (&Obj{}).Parse(input)
+	// case (&Arr{}).Check(r):
+	// 	return (&Arr{}).Parse(input)
+	// case (&Str{}).Check(r):
+	// 	return (&Str{}).Parse(input)
+	// case (&Paren{}).Check(r):
+	// 	return (&Paren{}).Parse(input)
+	// case (&Op{}).Check(r):
+	// 	return (&Op{}).Parse(input)
+	// default:
+	// 	return nil, "", NewUnexpectedCharErr("initial:default", r)
+	// }
 }

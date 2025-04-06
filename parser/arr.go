@@ -49,7 +49,7 @@ func (a *Arr) Parse(s string) (Data, string, error) {
 				return handleError(NewSingleExpectationErr(']'))
 			}
 
-			data, rest, err := parse(toparse[i:], false)
+			data, rest, err := parse(toparse[i:], mainOpts, false)
 			if err != nil {
 				return handleError(err)
 			}

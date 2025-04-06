@@ -8,7 +8,7 @@ func (p ParseError) Error() string {
 	return p.msg
 }
 func NewUnexpectedCharErr(which string, char rune) ParseError {
-	return ParseError{fmt.Sprintf("unexpected char in [%s]: %s", which, string(char))}
+	return ParseError{fmt.Sprintf("unexpected char in [%s]: \"%s\"", which, string(char))}
 }
 
 func NewExpectationErr(got rune, want rune) ParseError {

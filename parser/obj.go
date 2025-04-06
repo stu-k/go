@@ -66,7 +66,7 @@ func (o *Obj) Parse(s string) (Data, string, error) {
 			}
 
 			// parse token
-			data, rest, err := parse(toparse[i:], false)
+			data, rest, err := parse(toparse[i:], mainOpts, false)
 			if err != nil {
 				return handleError(err)
 			}
