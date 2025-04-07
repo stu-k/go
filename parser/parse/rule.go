@@ -118,7 +118,7 @@ func (a *Rule) Check(fn func(rune) bool) *Rule {
 	return new
 }
 
-func (a *Rule) Parse(s string) (string, string, error) {
+func (a *Rule) Parse(s string) ([]string, string, error) {
 	useStart := a.start != 0
 	useEnd := a.end != 0
 	useCount := a.count >= 0
@@ -126,7 +126,7 @@ func (a *Rule) Parse(s string) (string, string, error) {
 	// fail if empty string or doesn't start with
 	// Rule.Start value if init
 	if s == "" || (useStart && rune(s[0]) != a.start) {
-		return "", "", errors.NewBadMatchErr(a.name, s)
+		return nil, "", errors.NewBadMatchErr(a.name, s)
 	}
 
 	var result string
@@ -179,14 +179,14 @@ func (a *Rule) Parse(s string) (string, string, error) {
 
 		if useCount && !useEnd {
 			if countToUse >= a.count {
-				return result, s[i:], nil
+				return []string{result}, s[i:], nil
 			}
 		}
 
 		if !useCount && useEnd {
 			if r == a.end {
 				result += string(r)
-				return result, s[i+2:], nil
+				return []string{result}, s[i+2:], nil
 			}
 		}
 
@@ -194,9 +194,9 @@ func (a *Rule) Parse(s string) (string, string, error) {
 			if countToUse == a.count+1 {
 				if r == a.end {
 					result += string(r)
-					return result, s[i+1:], nil
+					return []string{result}, s[i+1:], nil
 				}
-				return "", "", errors.NewBadMatchErr(a.name, s)
+				return nil, "", errors.NewBadMatchErr(a.name, s)
 			}
 		}
 
@@ -204,10 +204,10 @@ func (a *Rule) Parse(s string) (string, string, error) {
 		if !ok {
 			err := checkEnd(countToUse)
 			if err != nil {
-				return "", "", err
+				return nil, "", err
 			}
 
-			return result, s[i:], nil
+			return []string{result}, s[i:], nil
 		}
 
 		result += string(r)
@@ -216,8 +216,8 @@ func (a *Rule) Parse(s string) (string, string, error) {
 
 	err := checkEnd(count)
 	if err != nil {
-		return "", "", err
+		return nil, "", err
 	}
 
-	return result, s[count:], nil
+	return []string{result}, s[count:], nil
 }

@@ -75,7 +75,7 @@ func TestAlpha(t *testing.T) {
 				t.Errorf("expected error \"%v\"; got \"%v\"", test.err, err)
 			}
 
-			if got != test.want {
+			if !eq(got, ss(test.want)) {
 				t.Errorf("expected output \"%v\"; got \"%v\"", test.want, got)
 			}
 

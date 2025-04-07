@@ -8,6 +8,19 @@ import (
 	"github.com/stu-k/go/parser/parse"
 )
 
+var ss = func(s ...string) []string { return s }
+var eq = func(a, b []string) bool {
+	if len(a) != len(b) {
+		return false
+	}
+	for i, v := range a {
+		if b[i] != v {
+			return false
+		}
+	}
+	return true
+}
+
 func TestRuleset(t *testing.T) {
 	ss := func(s ...string) []string { return s }
 	eq := func(a, b []string) bool {

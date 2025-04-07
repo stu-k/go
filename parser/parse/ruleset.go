@@ -33,11 +33,11 @@ func (r *Ruleset) Parse(s string) ([]string, string, error) {
 			return nil, "", err
 		}
 
-		if result == "" {
+		if result == nil {
 			return nil, "", errors.NewBadMatchErr(r.name, s)
 		}
 
-		results = append(results, result)
+		results = append(results, result...)
 		toparse = rest
 	}
 
