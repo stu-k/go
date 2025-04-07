@@ -68,6 +68,37 @@ func TestRuleset(t *testing.T) {
 	rstests[ruleset] = []rulesettest{
 		{"a:1", ruleset, ss("a", ":", "1"), "", nil},
 		{"abc:123", ruleset, ss("abc", ":", "123"), "", nil},
+		{"a:1:", ruleset, ss("a", ":", "1"), ":", nil},
+		{".a:1", ruleset, ss(), "", errs.ErrBadMatch},
+		{"a.:1", ruleset, ss(), "", errs.ErrBadMatch},
+		{"a:.1", ruleset, ss(), "", errs.ErrBadMatch},
+		{"a:1.", ruleset, ss("a", ":", "1"), ".", nil},
+	}
+
+	ruleset = parse.NewRuleset(
+		parse.FromChar('{'),
+		parse.Alpha,
+		parse.FromChar(':'),
+		parse.Alpha,
+		parse.FromChar('}'),
+	)
+	rstests[ruleset] = []rulesettest{
+		{"{a:x}", ruleset, ss("{", "a", ":", "x", "}"), "", nil},
+		{"{abc:xyz}", ruleset, ss("{", "abc", ":", "xyz", "}"), "", nil},
+		{".", ruleset, ss(), "", errs.ErrBadMatch},
+		{"{a:x}...", ruleset, ss("{", "a", ":", "x", "}"), "...", nil},
+	}
+
+	ruleset = parse.NewRuleset(
+		parse.FromChar('{'),
+		parse.Alpha.Wrap('_'),
+		parse.FromChar(':'),
+		parse.Alpha,
+		parse.FromChar('}'),
+	)
+	rstests[ruleset] = []rulesettest{
+		{"{_a_:x}", ruleset, ss("{", "_a_", ":", "x", "}"), "", nil},
+		{"{_abc_:x}", ruleset, ss("{", "_abc_", ":", "x", "}"), "", nil},
 	}
 
 	for rs, tests := range rstests {
