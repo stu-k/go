@@ -8,18 +8,22 @@ import (
 	"github.com/stu-k/go/parser/errors"
 )
 
-type Ruleset struct {
-	name string
-	list []*Rule
+type Parser interface {
+	Parse(string) ([]string, string, error)
 }
 
-func NewRuleset(name string, rules ...*Rule) *Ruleset {
+type Ruleset struct {
+	name string
+	list []Parser
+}
+
+func NewRuleset(name string, rules ...Parser) *Ruleset {
 	return &Ruleset{name, rules}
 }
 
-func (r *Ruleset) Len() int           { return len(r.list) }
-func (r *Ruleset) Add(rules ...*Rule) { r.list = append(r.list, rules...) }
-func (r *Ruleset) Name() string       { return r.name }
+func (r *Ruleset) Len() int            { return len(r.list) }
+func (r *Ruleset) Add(rules ...Parser) { r.list = append(r.list, rules...) }
+func (r *Ruleset) Name() string        { return r.name }
 func (r *Ruleset) Parse(s string) ([]string, string, error) {
 	if len(r.list) == 0 || s == "" {
 		return nil, "", errors.NewBadMatchErr(r.name, s)
