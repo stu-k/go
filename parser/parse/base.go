@@ -17,13 +17,34 @@ var Alpha = &Rule{
 	AtLeastOne:  true,
 }
 
+// Rule defines a set of variables to parse a token by
 type Rule struct {
-	Name        string
-	Count       int
-	Start, End  rune
-	Check       func(rune) bool
+	Name string
+
+	// Count is the exact count of characters
+	// expected in the resulting token
+	//
+	// ex. count(3) for abcd -> abc
+	//     count(3) for ab -> error
+	Count int
+
+	// Start, End are the characters the token is
+	// expected to be wrapped in to achieve tokenization
+	Start, End rune
+
+	// Check is the fn used to validate if the characters
+	// in a string are valid for the rule
+	Check func(rune) bool
+
+	// IgnoreSpace determines if spaces will be
+	// omitted in tokenization
+	//
+	// TODO: remove in favor of Check fn
 	IgnoreSpace bool
-	AtLeastOne  bool
+
+	// AtLeastOne determines if a token must have
+	// at least one valid character
+	AtLeastOne bool
 }
 
 func (a *Rule) Clone() *Rule {
@@ -44,32 +65,68 @@ func (a *Rule) WithCount(n int) *Rule {
 	return new
 }
 
+func (a *Rule) WrapWith(r rune) *Rule {
+	new := a.Clone()
+	new.Start = r
+	new.End = r
+	return new
+}
+
 func (a *Rule) Parse(s string) (string, string, error) {
 	useStart := a.Start != 0
 	useEnd := a.End != 0
 	useCount := a.Count >= 0
 
+	// fail if empty string or doesn't start with
+	// Rule.Start value if init
 	if s == "" || (useStart && rune(s[0]) != a.Start) {
 		return "", "", errors.NewBadMatchErr(a.Name, s)
 	}
 
+	var result string
+
+	// add Rule.Start into result and iterate
+	// past the value
 	toparse := s
 	if a.Start != 0 {
+		result += string(s[0])
 		toparse = s[1:]
 	}
 
-	var result string
 	var count int
 	var ignoredSpaces int
+	var r rune
+
+	// handle checking results on end of string
+	// or invalid character
+	checkEnd := func(ct int) error {
+		if a.AtLeastOne && result == "" {
+			return errors.NewBadMatchErr(a.Name, s)
+		}
+
+		if useCount && ct < a.Count {
+			return errors.NewBadMatchErr(a.Name, s)
+		}
+
+		if useEnd && r != a.End {
+			return errors.NewBadMatchErr(a.Name, s)
+		}
+		return nil
+	}
+
 	for i, c := range toparse {
-		r := rune(c)
-		if unicode.IsSpace(r) && a.IgnoreSpace {
+		r = rune(c)
+
+		if a.IgnoreSpace && unicode.IsSpace(r) {
 			count++
 			ignoredSpaces++
 			continue
 		}
 
 		countToUse := count
+
+		// ignored spaces shouldn't be counted
+		// as chars from Rule.Count
 		if a.IgnoreSpace {
 			countToUse -= ignoredSpaces
 		}
@@ -83,7 +140,7 @@ func (a *Rule) Parse(s string) (string, string, error) {
 		if !useCount && useEnd {
 			if r == a.End {
 				result += string(r)
-				return result, s[i+1:], nil
+				return result, s[i+2:], nil
 			}
 		}
 
@@ -99,12 +156,9 @@ func (a *Rule) Parse(s string) (string, string, error) {
 
 		ok := a.Check(r)
 		if !ok {
-			if a.AtLeastOne && result == "" {
-				return "", "", errors.NewBadMatchErr(a.Name, s)
-			}
-
-			if useCount && countToUse < a.Count {
-				return "", "", errors.NewBadMatchErr(a.Name, s)
+			err := checkEnd(countToUse)
+			if err != nil {
+				return "", "", err
 			}
 
 			return result, s[i:], nil
@@ -114,12 +168,9 @@ func (a *Rule) Parse(s string) (string, string, error) {
 		count++
 	}
 
-	if useCount && count < a.Count {
-		return "", "", errors.NewBadMatchErr(a.Name, s)
-	}
-
-	if a.AtLeastOne && result == "" {
-		return "", "", errors.NewBadMatchErr(a.Name, s)
+	err := checkEnd(count)
+	if err != nil {
+		return "", "", err
 	}
 
 	return result, s[count:], nil

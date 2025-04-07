@@ -90,4 +90,38 @@ func TestAlpha(t *testing.T) {
 			}
 		}
 	})
+
+	rule = parse.Alpha.WrapWith('_')
+	t.Run("wrap with _", func(t *testing.T) {
+		tt := []struct {
+			in   string
+			want string
+			rest string
+			err  error
+		}{
+			{"_a_", "_a_", "", nil},
+			{"_ab_", "_ab_", "", nil},
+			{"_abc_", "_abc_", "", nil},
+			{"_abcdefg_", "_abcdefg_", "", nil},
+			{"_abc", "", "", errs.ErrBadMatch},
+
+			{"_a_bc", "_a_", "bc", nil},
+			{"_a.bc", "", "", errs.ErrBadMatch},
+		}
+
+		for _, test := range tt {
+			got, rest, err := rule.Parse(test.in)
+			if !errors.Is(err, test.err) {
+				t.Errorf("for \"%v\" expected error \"%v\"; got \"%v\"", test.in, test.err, err)
+			}
+
+			if got != test.want {
+				t.Errorf("for \"%v\" expected output \"%v\"; got \"%v\"", test.in, test.want, got)
+			}
+
+			if rest != test.rest {
+				t.Errorf("for \"%v\" expected remainder \"%v\"; got \"%v\"", test.in, test.rest, rest)
+			}
+		}
+	})
 }
