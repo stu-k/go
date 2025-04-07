@@ -64,7 +64,7 @@ func NewRulesetFromStr(name, s string) (*Ruleset, error) {
 
 	rs := NewRuleset(name)
 
-	parts := strings.Split(s, "|")
+	parts := strings.Split(s, " | ")
 	if len(parts) == 0 {
 		return nil, fmt.Errorf("error creating ruleset: invalid string \"%s\"", s)
 	}
@@ -73,17 +73,13 @@ func NewRulesetFromStr(name, s string) (*Ruleset, error) {
 
 		var rsa rulesetargs
 
-		args := strings.Split(part, ",")
+		args := strings.Split(part, ", ")
 		for j, arg := range args {
 			if len(arg) == 0 || len(arg) == 1 {
 				return nil, errFn(arg, i, j)
 			}
 
 			r := rune(arg[1])
-			if arg[1:] == "comma" {
-				r = ','
-			}
-
 			switch rune(arg[0]) {
 
 			case 'r':

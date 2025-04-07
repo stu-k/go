@@ -193,7 +193,7 @@ func TestRulesetFromString(t *testing.T) {
 		{"123.", ruleset, ss("123"), ".", nil},
 	}
 
-	ruleset, err = parse.NewRulesetFromStr("alphanum", "ralpha|rnum")
+	ruleset, err = parse.NewRulesetFromStr("alphanum", "ralpha | rnum")
 	if err != nil {
 		t.Fatalf("ruleset creation failed: %v", err)
 	}
@@ -209,7 +209,7 @@ func TestRulesetFromString(t *testing.T) {
 
 	ruleset, err = parse.NewRulesetFromStr(
 		"kv(var var)",
-		"ralpha|c:,#1|rnum",
+		"ralpha | c:, #1 | rnum",
 	)
 	if err != nil {
 		t.Fatalf("ruleset creation failed: %v", err)
@@ -233,7 +233,7 @@ func TestRulesetFromString(t *testing.T) {
 
 	ruleset, err = parse.NewRulesetFromStr(
 		"obj(kv(var var))",
-		"c{,#1|ralpha|c:,#1|ralpha|c},#1",
+		"c{, #1 | ralpha | c:, #1 | ralpha | c}, #1",
 	)
 	if err != nil {
 		t.Fatalf("ruleset creation failed: %v", err)
@@ -260,7 +260,7 @@ func TestRulesetFromString(t *testing.T) {
 
 	ruleset, err = parse.NewRulesetFromStr(
 		"obj(kv(_var_ var))",
-		"c{,#1|ralpha,w_|c:,#1|ralpha|c},#1",
+		"c{, #1 | ralpha, w_ | c:, #1 | ralpha | c}, #1",
 	)
 	if err != nil {
 		t.Fatalf("ruleset creation failed: %v", err)
