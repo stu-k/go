@@ -22,6 +22,9 @@ func TestAlpha(t *testing.T) {
 			{"   a   bc", "abc", "", nil},
 			{"   a   b   c", "abc", "", nil},
 			{"   a   b   c   ", "abc", "", nil},
+			{"   a   ", "a", "", nil},
+			{"   a   .", "a", ".", nil},
+			{"   a   .  ", "a", ".  ", nil},
 			{"ab.c", "ab", ".c", nil},
 			{"abc.", "abc", ".", nil},
 
