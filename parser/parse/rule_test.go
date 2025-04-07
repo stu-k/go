@@ -9,30 +9,67 @@ import (
 )
 
 func TestAlpha(t *testing.T) {
-	rule := parse.Alpha
-	t.Run("ignore space", func(t *testing.T) {
-		tt := []struct {
-			in   string
-			want string
-			rest string
-			err  error
-		}{
-			{"abc", "abc", "", nil},
-			{"   abc", "abc", "", nil},
-			{"   a   bc", "abc", "", nil},
-			{"   a   b   c", "abc", "", nil},
-			{"   a   b   c   ", "abc", "", nil},
-			{"   a   ", "a", "", nil},
-			{"   a   .", "a", ".", nil},
-			{"   a   .  ", "a", ".  ", nil},
-			{"ab.c", "ab", ".c", nil},
-			{"abc.", "abc", ".", nil},
+	type testobj struct {
+		in   string
+		want string
+		rest string
+		err  error
+	}
 
-			{".", "", "", errs.ErrBadMatch},
-			{"", "", "", errs.ErrBadMatch},
-		}
+	rulemap := make(map[*parse.Rule][]testobj)
 
-		for _, test := range tt {
+	rulemap[parse.Alpha] = []testobj{
+		{"abc", "abc", "", nil},
+		{"   abc", "abc", "", nil},
+		{"   a   bc", "abc", "", nil},
+		{"   a   b   c", "abc", "", nil},
+		{"   a   b   c   ", "abc", "", nil},
+		{"   a   ", "a", "", nil},
+		{"   a   .", "a", ".", nil},
+		{"   a   .  ", "a", ".  ", nil},
+		{"ab.c", "ab", ".c", nil},
+		{"abc.", "abc", ".", nil},
+
+		{".", "", "", errs.ErrBadMatch},
+		{"", "", "", errs.ErrBadMatch},
+	}
+
+	rulemap[parse.Alpha.Count(3)] = []testobj{
+		{"abc", "abc", "", nil},
+		{"abcd", "abc", "d", nil},
+		{"abc.", "abc", ".", nil},
+
+		{"a", "", "", errs.ErrBadMatch},
+		{"ab", "", "", errs.ErrBadMatch},
+
+		{"abc ", "abc", "", nil},
+		{"   abc ", "abc", "", nil},
+		{"   abcd", "abc", "d", nil},
+		{"   a    b c  d", "abc", "d", nil},
+
+		{".a", "", "", errs.ErrBadMatch},
+		{"a.", "", "", errs.ErrBadMatch},
+		{".ab", "", "", errs.ErrBadMatch},
+		{"ab.", "", "", errs.ErrBadMatch},
+		{"a.b", "", "", errs.ErrBadMatch},
+
+		{".", "", "", errs.ErrBadMatch},
+		{"", "", "", errs.ErrBadMatch},
+	}
+
+	rulemap[parse.Alpha.Wrap('_')] = []testobj{
+		{"_a_", "_a_", "", nil},
+		{"_ab_", "_ab_", "", nil},
+		{"_abc_", "_abc_", "", nil},
+		{"_abcdefg_", "_abcdefg_", "", nil},
+		{"_abc", "", "", errs.ErrBadMatch},
+
+		{"_a_bc", "_a_", "bc", nil},
+		{"_a.bc", "", "", errs.ErrBadMatch},
+	}
+
+	for rule, tests := range rulemap {
+		for _, test := range tests {
 			got, rest, err := rule.Parse(test.in)
 			if !errors.Is(err, test.err) {
 				t.Errorf("expected error \"%v\"; got \"%v\"", test.err, err)
@@ -46,85 +83,5 @@ func TestAlpha(t *testing.T) {
 				t.Errorf("expected remainder \"%v\"; got \"%v\"", test.rest, rest)
 			}
 		}
-	})
-
-	rule = parse.Alpha.Count(3)
-	t.Run("count 3", func(t *testing.T) {
-		tt := []struct {
-			in   string
-			want string
-			rest string
-			err  error
-		}{
-			{"abc", "abc", "", nil},
-			{"abcd", "abc", "d", nil},
-			{"abc.", "abc", ".", nil},
-
-			{"a", "", "", errs.ErrBadMatch},
-			{"ab", "", "", errs.ErrBadMatch},
-
-			{"abc ", "abc", "", nil},
-			{"   abc ", "abc", "", nil},
-			{"   abcd", "abc", "d", nil},
-			{"   a    b c  d", "abc", "d", nil},
-
-			{".a", "", "", errs.ErrBadMatch},
-			{"a.", "", "", errs.ErrBadMatch},
-			{".ab", "", "", errs.ErrBadMatch},
-			{"ab.", "", "", errs.ErrBadMatch},
-			{"a.b", "", "", errs.ErrBadMatch},
-
-			{".", "", "", errs.ErrBadMatch},
-			{"", "", "", errs.ErrBadMatch},
-		}
-
-		for _, test := range tt {
-			got, rest, err := rule.Parse(test.in)
-			if !errors.Is(err, test.err) {
-				t.Errorf("for \"%v\" expected error \"%v\"; got \"%v\"", test.in, test.err, err)
-			}
-
-			if got != test.want {
-				t.Errorf("for \"%v\" expected output \"%v\"; got \"%v\"", test.in, test.want, got)
-			}
-
-			if rest != test.rest {
-				t.Errorf("for \"%v\" expected remainder \"%v\"; got \"%v\"", test.in, test.rest, rest)
-			}
-		}
-	})
-
-	rule = parse.Alpha.Wrap('_')
-	t.Run("wrap with _", func(t *testing.T) {
-		tt := []struct {
-			in   string
-			want string
-			rest string
-			err  error
-		}{
-			{"_a_", "_a_", "", nil},
-			{"_ab_", "_ab_", "", nil},
-			{"_abc_", "_abc_", "", nil},
-			{"_abcdefg_", "_abcdefg_", "", nil},
-			{"_abc", "", "", errs.ErrBadMatch},
-
-			{"_a_bc", "_a_", "bc", nil},
-			{"_a.bc", "", "", errs.ErrBadMatch},
-		}
-
-		for _, test := range tt {
-			got, rest, err := rule.Parse(test.in)
-			if !errors.Is(err, test.err) {
-				t.Errorf("for \"%v\" expected error \"%v\"; got \"%v\"", test.in, test.err, err)
-			}
-
-			if got != test.want {
-				t.Errorf("for \"%v\" expected output \"%v\"; got \"%v\"", test.in, test.want, got)
-			}
-
-			if rest != test.rest {
-				t.Errorf("for \"%v\" expected remainder \"%v\"; got \"%v\"", test.in, test.rest, rest)
-			}
-		}
-	})
+	}
 }
