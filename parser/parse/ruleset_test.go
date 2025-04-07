@@ -291,6 +291,20 @@ func TestRulesetFromString(t *testing.T) {
 		{"{_a_:x} .", ruleset, ss("{", "_a_", ":", "x", "}"), ".", nil},
 	}
 
+	ruleset, err = parse.NewRulesetFromStr(
+		"test special vals",
+		"c,, #1 | rnum, w| | c,, #2",
+	)
+	if err != nil {
+		t.Fatalf("ruleset creation failed: %v", err)
+	}
+
+	rstests[ruleset] = []rulesettest{
+		{".", ruleset, ss(), "", errs.ErrBadMatch},
+
+		{",|123|,,", ruleset, ss(",", "|123|", ",,"), "", nil},
+	}
+
 	for rs, tests := range rstests {
 		t.Run(rs.Name(), func(t *testing.T) {
 			for _, test := range tests {
