@@ -140,6 +140,9 @@ func NewRulesetFromStr(name, s string) (*Ruleset, error) {
 		if rsa.ct != 0 {
 			rule = rule.Count(rsa.ct)
 		}
+		if rsa.char != 0 {
+			rule = rule.Check(func(r rune) bool { return r == rsa.char })
+		}
 		rule = rule.Name(part)
 		if rule.IsAny() {
 			return nil, fmt.Errorf("error creating ruleset: can't add empty rule \"%s\"", part)

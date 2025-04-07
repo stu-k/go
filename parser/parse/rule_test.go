@@ -72,15 +72,15 @@ func TestAlpha(t *testing.T) {
 		for _, test := range tests {
 			got, rest, err := rule.Parse(test.in)
 			if !errors.Is(err, test.err) {
-				t.Errorf("expected error \"%v\"; got \"%v\"", test.err, err)
+				t.Errorf("for \"%s\" expected error \"%v\"; got \"%v\"", test.in, test.err, err)
 			}
 
 			if !eq(got, ss(test.want)) {
-				t.Errorf("expected output \"%v\"; got \"%v\"", test.want, got)
+				t.Errorf("for \"%s\" expected output \"%v\"; got \"%v\"", test.in, test.want, got)
 			}
 
 			if rest != test.rest {
-				t.Errorf("expected remainder \"%v\"; got \"%v\"", test.rest, rest)
+				t.Errorf("for \"%s\" expected remainder \"%v\"; got \"%v\"", test.in, test.rest, rest)
 			}
 		}
 	}
