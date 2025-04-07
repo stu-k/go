@@ -48,7 +48,7 @@ func TestAlpha(t *testing.T) {
 		}
 	})
 
-	rule = parse.Alpha.WithCount(3)
+	rule = parse.Alpha.Count(3)
 	t.Run("count 3", func(t *testing.T) {
 		tt := []struct {
 			in   string
@@ -94,7 +94,7 @@ func TestAlpha(t *testing.T) {
 		}
 	})
 
-	rule = parse.Alpha.WrapWith('_')
+	rule = parse.Alpha.Wrap('_')
 	t.Run("wrap with _", func(t *testing.T) {
 		tt := []struct {
 			in   string
