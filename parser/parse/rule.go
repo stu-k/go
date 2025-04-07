@@ -1,6 +1,7 @@
 package parse
 
 import (
+	"fmt"
 	"unicode"
 
 	"github.com/stu-k/go/parser/errors"
@@ -21,6 +22,24 @@ var blank = &Rule{
 }
 
 var Alpha = blank.Name("alpha").Check(unicode.IsLetter)
+
+var Numeric = blank.Name("numeric").Check(unicode.IsNumber)
+
+var Special = blank.Name("special").Check(func(r rune) bool {
+	_, ok := map[rune]struct{}{
+		':': {},
+		'?': {},
+		'*': {},
+	}[r]
+	return ok
+})
+
+func FromChar(c rune) *Rule {
+	return blank.
+		Name(fmt.Sprintf("char %s", string(c))).
+		Check(func(r rune) bool { return r == c }).
+		Count(1)
+}
 
 // Rule defines a set of variables to parse a token by
 type Rule struct {
