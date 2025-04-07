@@ -7,10 +7,6 @@ import (
 	"github.com/stu-k/go/parser/errors"
 )
 
-type Parser interface {
-	Parse(string) (string, string, error)
-}
-
 var blank = &Rule{
 	name:        "blank",
 	count:       -1,
@@ -25,14 +21,10 @@ var Alpha = blank.Name("alpha").Check(unicode.IsLetter)
 
 var Numeric = blank.Name("numeric").Check(unicode.IsNumber)
 
-var Special = blank.Name("special").Check(func(r rune) bool {
-	_, ok := map[rune]struct{}{
-		':': {},
-		'?': {},
-		'*': {},
-	}[r]
-	return ok
-})
+var rulemap = map[string]*Rule{
+	"alpha": Alpha,
+	"num":   Numeric,
+}
 
 func FromChar(c rune) *Rule {
 	return blank.
@@ -71,6 +63,8 @@ type Rule struct {
 	atLeastOne bool
 }
 
+func NewRule() *Rule { return blank.clone() }
+
 func (a *Rule) clone() *Rule {
 	return &Rule{
 		name:        a.name,
@@ -81,6 +75,10 @@ func (a *Rule) clone() *Rule {
 		ignoreSpace: a.ignoreSpace,
 		atLeastOne:  a.atLeastOne,
 	}
+}
+
+func (a *Rule) IsAny() bool {
+	return a == blank
 }
 
 func (a *Rule) Count(n int) *Rule {
