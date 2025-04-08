@@ -118,18 +118,26 @@ func TestRuleset(t *testing.T) {
 	for rs, tests := range rstests {
 		t.Run(rs.Name(), func(t *testing.T) {
 			for _, test := range tests {
-				got, rest, err := test.rs.Parse(test.in)
-				if !eq(got, test.want) {
+				got, err := test.rs.Parse(test.in)
+				if !errors.Is(err, test.err) {
+					t.Fatalf("for \"%v\" expected error \"%v\"; got \"%v\"", test.in, test.err, err)
+				}
+
+				if err != nil {
+					return
+				}
+
+				if got == nil {
+					t.Fatalf("for \"%v\" expected output not to be nil", test.in)
+				}
+
+				if !eq(got.Strings(), test.want) {
 					t.Errorf("for \"%v\" expected output \"%v\"; got \"%v\"", test.in, test.want, got)
 				}
 
-				if rest != test.rest {
-					t.Errorf("for \"%v\" expected remainder \"%v\"; got \"%v\"", test.in, test.rest, rest)
+				if got.Rest() != test.rest {
+					t.Errorf("for \"%v\" expected remainder \"%v\"; got \"%v\"", test.in, test.rest, got.Rest())
 				}
-				if !errors.Is(err, test.err) {
-					t.Errorf("for \"%v\" expected error \"%v\"; got \"%v\"", test.in, test.err, err)
-				}
-
 			}
 		})
 	}
@@ -207,18 +215,26 @@ func TestRulesetUntilFail(t *testing.T) {
 	for rs, tests := range rstests {
 		t.Run(rs.Name(), func(t *testing.T) {
 			for _, test := range tests {
-				got, rest, err := test.rs.Parse(test.in)
-				if !eq(got, test.want) {
+				got, err := test.rs.Parse(test.in)
+				if !errors.Is(err, test.err) {
+					t.Fatalf("for \"%v\" expected error \"%v\"; got \"%v\"", test.in, test.err, err)
+				}
+
+				if err != nil {
+					return
+				}
+
+				if got == nil {
+					t.Fatalf("for \"%v\" expected output not to be nil", test.in)
+				}
+
+				if !eq(got.Strings(), test.want) {
 					t.Errorf("for \"%v\" expected output \"%v\"; got \"%v\"", test.in, test.want, got)
 				}
 
-				if rest != test.rest {
-					t.Errorf("for \"%v\" expected remainder \"%v\"; got \"%v\"", test.in, test.rest, rest)
+				if got.Rest() != test.rest {
+					t.Errorf("for \"%v\" expected remainder \"%v\"; got \"%v\"", test.in, test.rest, got.Rest())
 				}
-				if !errors.Is(err, test.err) {
-					t.Errorf("for \"%v\" expected error \"%v\"; got \"%v\"", test.in, test.err, err)
-				}
-
 			}
 		})
 	}

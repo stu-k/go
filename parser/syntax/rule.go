@@ -103,10 +103,10 @@ func (a *Rule) Chars(s string) *Rule {
 	return new
 }
 
-func (a *Rule) Parse(s string) ([]string, string, error) {
+func (a *Rule) Parse(s string) (ParseResult, error) {
 	useCount := a.count >= 0
 	if s == "" {
-		return nil, "", errors.NewBadMatchErr(a.name, s)
+		return nil, errors.NewBadMatchErr(a.name, s)
 	}
 
 	var result string
@@ -140,9 +140,9 @@ func (a *Rule) Parse(s string) ([]string, string, error) {
 		if useCount {
 			if countToUse >= a.count {
 				if a.capture {
-					return []string{result}, s[i:], nil
+					return NewParseResult(a.name, []string{result}, s[i:]), nil
 				}
-				return []string{}, s[i:], nil
+				return NewParseResult(a.name, nil, s[i:]), nil
 			}
 		}
 
@@ -150,13 +150,13 @@ func (a *Rule) Parse(s string) ([]string, string, error) {
 		if !ok {
 			err := checkEnd(countToUse)
 			if err != nil {
-				return nil, "", err
+				return nil, err
 			}
 
 			if a.capture {
-				return []string{result}, s[i:], nil
+				return NewParseResult(a.name, []string{result}, s[i:]), nil
 			}
-			return []string{}, s[i:], nil
+			return NewParseResult(a.name, nil, s[i:]), nil
 		}
 
 		result += string(r)
@@ -165,11 +165,11 @@ func (a *Rule) Parse(s string) ([]string, string, error) {
 
 	err := checkEnd(count)
 	if err != nil {
-		return nil, "", err
+		return nil, err
 	}
 
 	if a.capture {
-		return []string{result}, s[count:], nil
+		return NewParseResult(a.name, []string{result}, s[count:]), nil
 	}
-	return []string{}, s[count:], nil
+	return NewParseResult(a.name, nil, s[count:]), nil
 }

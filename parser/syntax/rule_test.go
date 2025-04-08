@@ -95,17 +95,25 @@ func TestRule(t *testing.T) {
 
 	for rule, tests := range rulemap {
 		for _, test := range tests {
-			got, rest, err := rule.Parse(test.in)
+			got, err := rule.Parse(test.in)
 			if !errors.Is(err, test.err) {
-				t.Errorf("for \"%s\" expected error \"%v\"; got \"%v\"", test.in, test.err, err)
+				t.Fatalf("for \"%s\" expected error \"%v\"; got \"%v\"", test.in, test.err, err)
 			}
 
-			if !eq(got, ss(test.want)) {
+			if err != nil {
+				return
+			}
+
+			if got == nil {
+				t.Fatalf("for \"%s\" expected output not to be nil", test.in)
+			}
+
+			if !eq(got.Strings(), ss(test.want)) {
 				t.Errorf("for \"%s\" expected output \"%v\"; got \"%v\"", test.in, test.want, got)
 			}
 
-			if rest != test.rest {
-				t.Errorf("for \"%s\" expected remainder \"%v\"; got \"%v\"", test.in, test.rest, rest)
+			if got.Rest() != test.rest {
+				t.Errorf("for \"%s\" expected remainder \"%v\"; got \"%v\"", test.in, test.rest, got.Rest())
 			}
 		}
 	}
