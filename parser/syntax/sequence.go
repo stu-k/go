@@ -95,7 +95,7 @@ func returnPr(n, s string, err error) (*ParseResult, error) {
 type seqStrArgs struct {
 	rule        *Rule
 	char        rune
-	count       int
+	repeat      int
 	cap, usecap bool
 }
 
@@ -142,7 +142,7 @@ func newSequenceFromStrs(name string, pmap map[string]*Rule, parts ...string) (*
 				if err != nil {
 					return nil, errFn(arg, i, j)
 				}
-				sqa.count = ct
+				sqa.repeat = ct
 				continue
 
 			case 'c':
@@ -174,8 +174,8 @@ func newSequenceFromStrs(name string, pmap map[string]*Rule, parts ...string) (*
 		} else {
 			rule = rule.Named(part)
 		}
-		if sqa.count != 0 {
-			rule = rule.Count(sqa.count)
+		if sqa.repeat != 0 {
+			rule = rule.Repeat(sqa.repeat)
 		}
 		if sqa.char != 0 {
 			rule = rule.CheckChar(func(r rune) bool { return r == sqa.char })

@@ -63,7 +63,7 @@ func TestRule(t *testing.T) {
 		{"", "", "", errs.ErrBadMatch},
 	}
 
-	rulemap[stx.RuleAlpha.Count(3)] = []testobj{
+	rulemap[stx.RuleAlpha.Repeat(3)] = []testobj{
 		{"abc", "abc", "", nil},
 		{"abcd", "abc", "d", nil},
 		{"abc.", "abc", ".", nil},
