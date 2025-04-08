@@ -21,15 +21,10 @@ func TestRule(t *testing.T) {
 
 	rulemap[parse.RuleAlpha] = []testobj{
 		{"abc", "abc", "", nil},
-		{"   abc", "abc", "", nil},
-		{"   a   bc", "abc", "", nil},
-		{"   a   b   c", "abc", "", nil},
-		{"   a   b   c   ", "abc", "", nil},
-		{"   a   ", "a", "", nil},
-		{"   a   .", "a", ".", nil},
-		{"   a   .  ", "a", ".  ", nil},
-		{"ab.c", "ab", ".c", nil},
 		{"abc.", "abc", ".", nil},
+		{"ab.c", "ab", ".c", nil},
+		{"a.bc", "a", ".bc", nil},
+		{".abc", "", "", errs.ErrBadMatch},
 
 		{".", "", "", errs.ErrBadMatch},
 		{"", "", "", errs.ErrBadMatch},
@@ -39,20 +34,7 @@ func TestRule(t *testing.T) {
 		{"abc", "abc", "", nil},
 		{"abcd", "abc", "d", nil},
 		{"abc.", "abc", ".", nil},
-
-		{"a", "", "", errs.ErrBadMatch},
 		{"ab", "", "", errs.ErrBadMatch},
-
-		{"abc ", "abc", "", nil},
-		{"   abc ", "abc", "", nil},
-		{"   abcd", "abc", "d", nil},
-		{"   a    b c  d", "abc", "d", nil},
-
-		{".a", "", "", errs.ErrBadMatch},
-		{"a.", "", "", errs.ErrBadMatch},
-		{".ab", "", "", errs.ErrBadMatch},
-		{"ab.", "", "", errs.ErrBadMatch},
-		{"a.b", "", "", errs.ErrBadMatch},
 
 		{".", "", "", errs.ErrBadMatch},
 		{"", "", "", errs.ErrBadMatch},
@@ -62,10 +44,13 @@ func TestRule(t *testing.T) {
 		{"a", "", "", nil},
 		{"ab", "", "", nil},
 		{"abc", "", "", nil},
-		{"a.", "", ".", nil},
-		{"a   .", "", ".", nil},
+		{"abc.", "", ".", nil},
+		{"ab.c", "", ".c", nil},
+		{"a.bc", "", ".bc", nil},
+		{".abc", "", "", errs.ErrBadMatch},
 
 		{".", "", "", errs.ErrBadMatch},
+		{"", "", "", errs.ErrBadMatch},
 	}
 
 	rulemap[parse.RuleAlpha.Check(unicode.IsNumber)] = []testobj{
@@ -73,21 +58,10 @@ func TestRule(t *testing.T) {
 		{"12", "12", "", nil},
 		{"123", "123", "", nil},
 		{"1.", "1", ".", nil},
-		{"1   .", "1", ".", nil},
+		{".1", "", "", errs.ErrBadMatch},
 
 		{".", "", "", errs.ErrBadMatch},
-	}
-
-	rulemap[parse.RuleAlpha.IgnoreSpace(false)] = []testobj{
-		{"a", "a", "", nil},
-
-		{"a ", "a", " ", nil},
-		{" a", "", "", errs.ErrBadMatch},
-		{"a b", "a", " b", nil},
-		{"ab ", "ab", " ", nil},
-		{"ab c", "ab", " c", nil},
-
-		{".", "", "", errs.ErrBadMatch},
+		{"", "", "", errs.ErrBadMatch},
 	}
 
 	for rule, tests := range rulemap {

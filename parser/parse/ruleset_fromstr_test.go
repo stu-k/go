@@ -66,18 +66,17 @@ func TestRulesetFromString(t *testing.T) {
 
 	rstests[ruleset] = []rulesettest{
 		{"a:1", ruleset, ss("a", ":", "1"), "", nil},
-
 		{"abc:123", ruleset, ss("abc", ":", "123"), "", nil},
+
+		{"a::1", ruleset, nil, "", errs.ErrBadMatch},
+		{":1", ruleset, nil, "", errs.ErrBadMatch},
+		{"a1", ruleset, nil, "", errs.ErrBadMatch},
+		{"a:", ruleset, nil, "", errs.ErrBadMatch},
 
 		{".a:1", ruleset, nil, "", errs.ErrBadMatch},
 		{"a.:1", ruleset, nil, "", errs.ErrBadMatch},
 		{"a:.1", ruleset, nil, "", errs.ErrBadMatch},
 		{"a:1.", ruleset, ss("a", ":", "1"), ".", nil},
-
-		{" a:1", ruleset, ss("a", ":", "1"), "", nil},
-		{"a :1", ruleset, ss("a", ":", "1"), "", nil},
-		{"a: 1", ruleset, ss("a", ":", "1"), "", nil},
-		{"a:1 .", ruleset, ss("a", ":", "1"), ".", nil},
 	}
 
 	ruleset, err = parse.NewRulesetFromStr(
@@ -90,12 +89,6 @@ func TestRulesetFromString(t *testing.T) {
 
 	rstests[ruleset] = []rulesettest{
 		{"{a:x}", ruleset, ss("{", "a", ":", "x", "}"), "", nil},
-		{" {a:x}", ruleset, ss("{", "a", ":", "x", "}"), "", nil},
-		{"{ a:x}", ruleset, ss("{", "a", ":", "x", "}"), "", nil},
-		{"{a :x}", ruleset, ss("{", "a", ":", "x", "}"), "", nil},
-		{"{a: x}", ruleset, ss("{", "a", ":", "x", "}"), "", nil},
-		{"{a:x }", ruleset, ss("{", "a", ":", "x", "}"), "", nil},
-		{"{a:x} ", ruleset, ss("{", "a", ":", "x", "}"), "", nil},
 		{"{abc:xyz}", ruleset, ss("{", "abc", ":", "xyz", "}"), "", nil},
 
 		{".", ruleset, ss(), "", errs.ErrBadMatch},
@@ -117,8 +110,9 @@ func TestRulesetFromString(t *testing.T) {
 
 	rstests[ruleset] = []rulesettest{
 		{"{_a_:x}", ruleset, ss("{", "_", "a", "_", ":", "x", "}"), "", nil},
-
 		{"{_abc_:xyz}", ruleset, ss("{", "_", "abc", "_", ":", "xyz", "}"), "", nil},
+
+		{".", ruleset, ss(), "", errs.ErrBadMatch},
 	}
 
 	ruleset, err = parse.NewRulesetFromStr(
@@ -145,7 +139,7 @@ func TestRulesetFromString(t *testing.T) {
 
 	rstests[ruleset] = []rulesettest{
 		{".", ruleset, ss(), "", errs.ErrBadMatch},
-		{"a, b, c,", ruleset, ss("a", ",", "b", ",", "c", ","), "", nil},
+		{"a,b,c,", ruleset, ss("a", ",", "b", ",", "c", ","), "", nil},
 	}
 
 	ruleset, err = parse.NewRulesetFromStr("alpha3",
@@ -171,9 +165,6 @@ func TestRulesetFromString(t *testing.T) {
 		{"a:1", ruleset, ss("a", "1"), "", nil},
 		{"abc:123", ruleset, ss("abc", "123"), "", nil},
 		{"a::1", ruleset, ss("a", "1"), "", nil},
-		{"a: :1", ruleset, ss("a", "1"), "", nil},
-
-		{".a:1", ruleset, ss(), "", errs.ErrBadMatch},
 
 		{".", ruleset, ss(), "", errs.ErrBadMatch},
 	}

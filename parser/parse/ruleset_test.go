@@ -162,15 +162,11 @@ func TestRulesetUntilFail(t *testing.T) {
 		{"a", rs, ss("a"), "", nil},
 		{"ab", rs, ss("a", "b"), "", nil},
 		{"abc", rs, ss("a", "b", "c"), "", nil},
-		{"xyz", rs, ss("x", "y", "z"), "", nil},
 
 		{"a.", rs, ss("a"), ".", nil},
 		{"ab.", rs, ss("a", "b"), ".", nil},
 
-		{" ", rs, ss(), "", errs.ErrBadMatch},
-		{"   a   ", rs, ss("a"), "", nil},
-
-		{".a", rs, ss(), "", errs.ErrBadMatch},
+		{".", rs, ss(), "", errs.ErrBadMatch},
 	}
 
 	rs, err = mk("alpha comma", "ralpha, #1 | c,, #1")
@@ -181,7 +177,7 @@ func TestRulesetUntilFail(t *testing.T) {
 		{"a,", rs, ss("a", ","), "", nil},
 		{"a,b,", rs, ss("a", ",", "b", ","), "", nil},
 		{"a,b", rs, ss("a", ","), "b", nil},
-		{"a ,", rs, ss("a", ","), "", nil},
+		{"a,", rs, ss("a", ","), "", nil},
 
 		{".", rs, ss(), "", errs.ErrBadMatch},
 	}
@@ -193,10 +189,10 @@ func TestRulesetUntilFail(t *testing.T) {
 		t.Fatalf("ruleset creation failed: %v", err)
 	}
 	rstests[rs] = []rulesettest{
-		{"abc: 123", rs, ss("abc", ":", "123"), "", nil},
-		{"a: 1 b: 2", rs, ss("a", ":", "1", "b", ":", "2"), "", nil},
+		{"abc:123", rs, ss("abc", ":", "123"), "", nil},
+		{"a:1b:2", rs, ss("a", ":", "1", "b", ":", "2"), "", nil},
 		{"a:1", rs, ss("a", ":", "1"), "", nil},
-		{"a:1 b:", rs, ss("a", ":", "1"), "b:", nil},
+		{"a:1b:", rs, ss("a", ":", "1"), "b:", nil},
 
 		{".", rs, ss(), "", errs.ErrBadMatch},
 	}

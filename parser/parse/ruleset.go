@@ -72,7 +72,3 @@ func (r *RulesetUntilFail) Parse(s string) ([]string, string, error) {
 	}
 	return allResults, toparse, nil
 }
-
-func NewRulesetUntilFail(name string, rules ...Parsable) *RulesetUntilFail {
-	return &RulesetUntilFail{NewRuleset(name, rules...)}
-}

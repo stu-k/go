@@ -12,12 +12,11 @@ var defaultRulemap = map[string]*Rule{
 }
 
 var RuleAny = &Rule{
-	name:        "any",
-	count:       -1,
-	check:       func(_ rune) bool { return true },
-	ignoreSpace: true,
-	atLeastOne:  true,
-	capture:     true,
+	name:       "any",
+	count:      -1,
+	check:      func(_ rune) bool { return true },
+	atLeastOne: true,
+	capture:    true,
 }
 
 var RuleAlpha = RuleAny.Name("alpha").Check(unicode.IsLetter)
@@ -39,12 +38,6 @@ type Rule struct {
 	// in a string are valid for the rule
 	check func(rune) bool
 
-	// ignoreSpace determines if spaces will be
-	// omitted in tokenization
-	//
-	// TODO: remove in favor of Check fn
-	ignoreSpace bool
-
 	// atLeastOne determines if a token must have
 	// at least one valid character
 	atLeastOne bool
@@ -57,12 +50,11 @@ func NewRule() *Rule { return RuleAny.clone() }
 
 func (a *Rule) clone() *Rule {
 	return &Rule{
-		name:        a.name,
-		count:       a.count,
-		check:       a.check,
-		ignoreSpace: a.ignoreSpace,
-		atLeastOne:  a.atLeastOne,
-		capture:     a.capture,
+		name:       a.name,
+		count:      a.count,
+		check:      a.check,
+		atLeastOne: a.atLeastOne,
+		capture:    a.capture,
 	}
 }
 
@@ -79,12 +71,6 @@ func (a *Rule) Count(n int) *Rule {
 func (a *Rule) Name(s string) *Rule {
 	new := a.clone()
 	new.name = s
-	return new
-}
-
-func (a *Rule) IgnoreSpace(v bool) *Rule {
-	new := a.clone()
-	new.ignoreSpace = v
 	return new
 }
 
@@ -130,7 +116,6 @@ func (a *Rule) Parse(s string) ([]string, string, error) {
 	toparse := s
 
 	var count int
-	var ignoredSpaces int
 	var r rune
 
 	// handle checking results on end of string
@@ -150,19 +135,7 @@ func (a *Rule) Parse(s string) ([]string, string, error) {
 	for i, c := range toparse {
 		r = rune(c)
 
-		if a.ignoreSpace && unicode.IsSpace(r) {
-			count++
-			ignoredSpaces++
-			continue
-		}
-
 		countToUse := count
-
-		// ignored spaces shouldn't be counted
-		// as chars from Rule.Count
-		if a.ignoreSpace {
-			countToUse -= ignoredSpaces
-		}
 
 		if useCount {
 			if countToUse >= a.count {
