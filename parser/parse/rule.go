@@ -90,6 +90,12 @@ func (a *Rule) Name(s string) *Rule {
 	return new
 }
 
+func (a *Rule) IgnoreSpace(v bool) *Rule {
+	new := a.clone()
+	new.ignoreSpace = v
+	return new
+}
+
 func (a *Rule) Check(fn func(rune) bool) *Rule {
 	new := a.clone()
 	new.check = fn

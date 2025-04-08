@@ -73,7 +73,19 @@ func TestRule(t *testing.T) {
 		{"12", "12", "", nil},
 		{"123", "123", "", nil},
 		{"1.", "1", ".", nil},
-		{"1   .", ".", ".", nil},
+		{"1   .", "1", ".", nil},
+
+		{".", "", "", errs.ErrBadMatch},
+	}
+
+	rulemap[parse.Alpha.IgnoreSpace(false)] = []testobj{
+		{"a", "a", "", nil},
+
+		{"a ", "a", " ", nil},
+		{" a", "", "", errs.ErrBadMatch},
+		{"a b", "a", " b", nil},
+		{"ab ", "ab", " ", nil},
+		{"ab c", "ab", " c", nil},
 
 		{".", "", "", errs.ErrBadMatch},
 	}
