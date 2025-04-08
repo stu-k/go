@@ -8,63 +8,63 @@ import (
 	stx "github.com/stu-k/go/parser/syntax"
 )
 
-func TestRuleset(t *testing.T) {
-	type rulesettest struct {
+func TestSequence(t *testing.T) {
+	type seqtest struct {
 		in   string
-		rs   *stx.Ruleset
+		rs   *stx.Sequence
 		want []string
 		rest string
 		err  error
 	}
 
-	rstests := make(map[*stx.Ruleset][]rulesettest)
+	sqTests := make(map[*stx.Sequence][]seqtest)
 
-	ruleset := stx.NewRuleset("alpha", stx.RuleAlpha)
-	rstests[ruleset] = []rulesettest{
-		{"abc", ruleset, ss("abc"), "", nil},
-		{"ab.c", ruleset, ss("ab"), ".c", nil},
-		{"abc.", ruleset, ss("abc"), ".", nil},
-		{".", ruleset, ss(), "", errs.ErrBadMatch},
+	sequence := stx.NewSequence("alpha", stx.RuleAlpha)
+	sqTests[sequence] = []seqtest{
+		{"abc", sequence, ss("abc"), "", nil},
+		{"ab.c", sequence, ss("ab"), ".c", nil},
+		{"abc.", sequence, ss("abc"), ".", nil},
+		{".", sequence, ss(), "", errs.ErrBadMatch},
 	}
 
-	ruleset = stx.NewRuleset("num", stx.RuleNum)
-	rstests[ruleset] = []rulesettest{
-		{"123", ruleset, ss("123"), "", nil},
-		{"12.3", ruleset, ss("12"), ".3", nil},
-		{"123.", ruleset, ss("123"), ".", nil},
+	sequence = stx.NewSequence("num", stx.RuleNum)
+	sqTests[sequence] = []seqtest{
+		{"123", sequence, ss("123"), "", nil},
+		{"12.3", sequence, ss("12"), ".3", nil},
+		{"123.", sequence, ss("123"), ".", nil},
 	}
 
-	ruleset = stx.NewRuleset(
+	sequence = stx.NewSequence(
 		"alphanum",
 		stx.RuleAlpha,
 		stx.RuleNum,
 	)
-	rstests[ruleset] = []rulesettest{
-		{"a1", ruleset, ss("a", "1"), "", nil},
-		{"abc123", ruleset, ss("abc", "123"), "", nil},
-		{"a1.", ruleset, ss("a", "1"), ".", nil},
-		{"a", ruleset, ss(), "", errs.ErrBadMatch},
-		{"1", ruleset, ss(), "", errs.ErrBadMatch},
-		{"a.1", ruleset, ss(), "", errs.ErrBadMatch},
+	sqTests[sequence] = []seqtest{
+		{"a1", sequence, ss("a", "1"), "", nil},
+		{"abc123", sequence, ss("abc", "123"), "", nil},
+		{"a1.", sequence, ss("a", "1"), ".", nil},
+		{"a", sequence, ss(), "", errs.ErrBadMatch},
+		{"1", sequence, ss(), "", errs.ErrBadMatch},
+		{"a.1", sequence, ss(), "", errs.ErrBadMatch},
 	}
 
-	ruleset = stx.NewRuleset(
+	sequence = stx.NewSequence(
 		"kv(var var)",
 		stx.RuleAlpha,
 		stx.RuleAny.Chars(":"),
 		stx.RuleNum,
 	)
-	rstests[ruleset] = []rulesettest{
-		{"a:1", ruleset, ss("a", ":", "1"), "", nil},
-		{"abc:123", ruleset, ss("abc", ":", "123"), "", nil},
-		{"a:1:", ruleset, ss("a", ":", "1"), ":", nil},
-		{".a:1", ruleset, ss(), "", errs.ErrBadMatch},
-		{"a.:1", ruleset, ss(), "", errs.ErrBadMatch},
-		{"a:.1", ruleset, ss(), "", errs.ErrBadMatch},
-		{"a:1.", ruleset, ss("a", ":", "1"), ".", nil},
+	sqTests[sequence] = []seqtest{
+		{"a:1", sequence, ss("a", ":", "1"), "", nil},
+		{"abc:123", sequence, ss("abc", ":", "123"), "", nil},
+		{"a:1:", sequence, ss("a", ":", "1"), ":", nil},
+		{".a:1", sequence, ss(), "", errs.ErrBadMatch},
+		{"a.:1", sequence, ss(), "", errs.ErrBadMatch},
+		{"a:.1", sequence, ss(), "", errs.ErrBadMatch},
+		{"a:1.", sequence, ss("a", ":", "1"), ".", nil},
 	}
 
-	ruleset = stx.NewRuleset(
+	sequence = stx.NewSequence(
 		"obj(kv(var var))",
 		stx.RuleAny.Chars("{"),
 		stx.RuleAlpha,
@@ -72,14 +72,14 @@ func TestRuleset(t *testing.T) {
 		stx.RuleAlpha,
 		stx.RuleAny.Chars("}"),
 	)
-	rstests[ruleset] = []rulesettest{
-		{"{a:x}", ruleset, ss("{", "a", ":", "x", "}"), "", nil},
-		{"{abc:xyz}", ruleset, ss("{", "abc", ":", "xyz", "}"), "", nil},
-		{".", ruleset, ss(), "", errs.ErrBadMatch},
-		{"{a:x}...", ruleset, ss("{", "a", ":", "x", "}"), "...", nil},
+	sqTests[sequence] = []seqtest{
+		{"{a:x}", sequence, ss("{", "a", ":", "x", "}"), "", nil},
+		{"{abc:xyz}", sequence, ss("{", "abc", ":", "xyz", "}"), "", nil},
+		{".", sequence, ss(), "", errs.ErrBadMatch},
+		{"{a:x}...", sequence, ss("{", "a", ":", "x", "}"), "...", nil},
 	}
 
-	ruleset = stx.NewRuleset(
+	sequence = stx.NewSequence(
 		"obj(kv(_var_ var))",
 		stx.RuleAny.Chars("{"),
 		stx.RuleAny.Chars("_"),
@@ -89,12 +89,12 @@ func TestRuleset(t *testing.T) {
 		stx.RuleAlpha,
 		stx.RuleAny.Chars("}"),
 	)
-	rstests[ruleset] = []rulesettest{
-		{"{_a_:x}", ruleset, ss("{", "_", "a", "_", ":", "x", "}"), "", nil},
-		{"{_abc_:x}", ruleset, ss("{", "_", "abc", "_", ":", "x", "}"), "", nil},
+	sqTests[sequence] = []seqtest{
+		{"{_a_:x}", sequence, ss("{", "_", "a", "_", ":", "x", "}"), "", nil},
+		{"{_abc_:x}", sequence, ss("{", "_", "abc", "_", ":", "x", "}"), "", nil},
 	}
 
-	for rs, tests := range rstests {
+	for rs, tests := range sqTests {
 		t.Run(rs.Name(), func(t *testing.T) {
 			for _, test := range tests {
 				got, err := test.rs.Parse(test.in)
@@ -122,16 +122,16 @@ func TestRuleset(t *testing.T) {
 	}
 }
 
-func TestRulesetUntilFail(t *testing.T) {
+func TestSeqUntilFail(t *testing.T) {
 	mk := func(s string, r ...string) (stx.Parsable, error) {
-		rfs, err := stx.NewRulesetFromStrs(s, r...)
+		rfs, err := stx.NewSequenceFromStrs(s, r...)
 		if err != nil {
 			return nil, err
 		}
 		return rfs.UntilFail(), nil
 	}
 
-	type rulesettest struct {
+	type seqTest struct {
 		in   string
 		rs   stx.Parsable
 		want []string
@@ -139,59 +139,59 @@ func TestRulesetUntilFail(t *testing.T) {
 		err  error
 	}
 
-	rstests := make(map[stx.Parsable][]rulesettest)
+	sqtests := make(map[stx.Parsable][]seqTest)
 
-	rs, err := mk(
+	sq, err := mk(
 		"alpha 1",
 		"ralpha, #1",
 	)
 	if err != nil {
 		t.Fatalf("ruleset creation failed: %v", err)
 	}
-	rstests[rs] = []rulesettest{
-		{"a", rs, ss("a"), "", nil},
-		{"ab", rs, ss("a", "b"), "", nil},
-		{"abc", rs, ss("a", "b", "c"), "", nil},
+	sqtests[sq] = []seqTest{
+		{"a", sq, ss("a"), "", nil},
+		{"ab", sq, ss("a", "b"), "", nil},
+		{"abc", sq, ss("a", "b", "c"), "", nil},
 
-		{"a.", rs, ss("a"), ".", nil},
-		{"ab.", rs, ss("a", "b"), ".", nil},
+		{"a.", sq, ss("a"), ".", nil},
+		{"ab.", sq, ss("a", "b"), ".", nil},
 
-		{".", rs, ss(), "", errs.ErrBadMatch},
+		{".", sq, ss(), "", errs.ErrBadMatch},
 	}
 
-	rs, err = mk(
+	sq, err = mk(
 		"alpha comma",
 		"ralpha, #1", "c,, #1",
 	)
 	if err != nil {
 		t.Fatalf("ruleset creation failed: %v", err)
 	}
-	rstests[rs] = []rulesettest{
-		{"a,", rs, ss("a", ","), "", nil},
-		{"a,b,", rs, ss("a", ",", "b", ","), "", nil},
-		{"a,b", rs, ss("a", ","), "b", nil},
-		{"a,", rs, ss("a", ","), "", nil},
+	sqtests[sq] = []seqTest{
+		{"a,", sq, ss("a", ","), "", nil},
+		{"a,b,", sq, ss("a", ",", "b", ","), "", nil},
+		{"a,b", sq, ss("a", ","), "b", nil},
+		{"a,", sq, ss("a", ","), "", nil},
 
-		{".", rs, ss(), "", errs.ErrBadMatch},
+		{".", sq, ss(), "", errs.ErrBadMatch},
 	}
 
-	rs, err = mk(
+	sq, err = mk(
 		"str: num",
 		"ralpha", "c:, #1", "rnum",
 	)
 	if err != nil {
 		t.Fatalf("ruleset creation failed: %v", err)
 	}
-	rstests[rs] = []rulesettest{
-		{"abc:123", rs, ss("abc", ":", "123"), "", nil},
-		{"a:1b:2", rs, ss("a", ":", "1", "b", ":", "2"), "", nil},
-		{"a:1", rs, ss("a", ":", "1"), "", nil},
-		{"a:1b:", rs, ss("a", ":", "1"), "b:", nil},
+	sqtests[sq] = []seqTest{
+		{"abc:123", sq, ss("abc", ":", "123"), "", nil},
+		{"a:1b:2", sq, ss("a", ":", "1", "b", ":", "2"), "", nil},
+		{"a:1", sq, ss("a", ":", "1"), "", nil},
+		{"a:1b:", sq, ss("a", ":", "1"), "b:", nil},
 
-		{".", rs, ss(), "", errs.ErrBadMatch},
+		{".", sq, ss(), "", errs.ErrBadMatch},
 	}
 
-	for rs, tests := range rstests {
+	for rs, tests := range sqtests {
 		t.Run(rs.Name(), func(t *testing.T) {
 			for _, test := range tests {
 				got, err := test.rs.Parse(test.in)
@@ -219,24 +219,24 @@ func TestRulesetUntilFail(t *testing.T) {
 	}
 }
 
-func TestRulesetOneOf(t *testing.T) {
+func TestSeqOneOf(t *testing.T) {
 	mk := func(s string, r ...string) (stx.Parsable, error) {
-		rfs, err := stx.NewRulesetFromStrs(s, r...)
+		sfs, err := stx.NewSequenceFromStrs(s, r...)
 		if err != nil {
 			return nil, err
 		}
-		return rfs.OneOf(), nil
+		return sfs.OneOf(), nil
 	}
 
-	type rulesettest struct {
+	type sqTest struct {
 		in   string
 		want []string
 		err  error
 	}
 
-	rstests := make(map[stx.Parsable][]rulesettest)
+	sqTests := make(map[stx.Parsable][]sqTest)
 
-	rs1, err := mk(
+	sq1, err := mk(
 		"alp",
 		"ralpha",
 	)
@@ -244,7 +244,7 @@ func TestRulesetOneOf(t *testing.T) {
 		t.Fatalf("ruleset creation failed: %v", err)
 	}
 
-	rs2, err := mk(
+	sq2, err := mk(
 		"1a",
 		"ca, #1",
 	)
@@ -252,7 +252,7 @@ func TestRulesetOneOf(t *testing.T) {
 		t.Fatalf("ruleset creation failed: %v", err)
 	}
 
-	rs3, err := mk(
+	sq3, err := mk(
 		"2alp",
 		"ralpha, #2",
 	)
@@ -260,7 +260,7 @@ func TestRulesetOneOf(t *testing.T) {
 		t.Fatalf("ruleset creation failed: %v", err)
 	}
 
-	rs4, err := mk(
+	sq4, err := mk(
 		"2b",
 		"cb, #2",
 	)
@@ -268,8 +268,8 @@ func TestRulesetOneOf(t *testing.T) {
 		t.Fatalf("ruleset creation failed: %v", err)
 	}
 
-	rs := stx.NewRuleset("a0.", rs1, rs2, rs3, rs4).OneOf()
-	rstests[rs] = []rulesettest{
+	sq := stx.NewSequence("a0.", sq1, sq2, sq3, sq4).OneOf()
+	sqTests[sq] = []sqTest{
 		{"a", ss("alp", "1a"), nil},
 		{"aa", ss("alp", "1a", "2alp"), nil},
 		{"aaa", ss("alp", "1a", "2alp"), nil},
@@ -285,7 +285,7 @@ func TestRulesetOneOf(t *testing.T) {
 		{".", ss(), errs.ErrBadMatch},
 	}
 
-	rs1, err = mk(
+	sq1, err = mk(
 		"var",
 		"ralpha",
 	)
@@ -293,7 +293,7 @@ func TestRulesetOneOf(t *testing.T) {
 		t.Fatalf("ruleset creation failed: %v", err)
 	}
 
-	rs2, err = mk(
+	sq2, err = mk(
 		"str",
 		"c', #1", "ralpha", "c', #1",
 	)
@@ -301,8 +301,8 @@ func TestRulesetOneOf(t *testing.T) {
 		t.Fatalf("ruleset creation failed: %v", err)
 	}
 
-	rs = stx.NewRuleset("str / var", rs1, rs2).OneOf()
-	rstests[rs] = []rulesettest{
+	sq = stx.NewSequence("str / var", sq1, sq2).OneOf()
+	sqTests[sq] = []sqTest{
 		{"'str'", ss("str"), nil},
 		{"var", ss("var"), nil},
 
@@ -310,10 +310,10 @@ func TestRulesetOneOf(t *testing.T) {
 		{".", ss(), errs.ErrBadMatch},
 	}
 
-	for rs, tests := range rstests {
-		t.Run(rs.Name(), func(t *testing.T) {
+	for sq, tests := range sqTests {
+		t.Run(sq.Name(), func(t *testing.T) {
 			for _, test := range tests {
-				got, err := rs.Parse(test.in)
+				got, err := sq.Parse(test.in)
 				if !errors.Is(err, test.err) {
 					t.Fatalf("for \"%v\" expected error \"%v\"; got \"%v\"", test.in, test.err, err)
 				}

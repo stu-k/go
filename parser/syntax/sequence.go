@@ -9,21 +9,21 @@ type Parsable interface {
 	Name() string
 }
 
-type Ruleset struct {
+type Sequence struct {
 	name string
 	list []Parsable
 }
 
-func NewRuleset(name string, rules ...Parsable) *Ruleset {
-	return &Ruleset{name, rules}
+func NewSequence(name string, rules ...Parsable) *Sequence {
+	return &Sequence{name, rules}
 }
 
-func (r *Ruleset) Len() int                     { return len(r.list) }
-func (r *Ruleset) Add(rules ...Parsable)        { r.list = append(r.list, rules...) }
-func (r *Ruleset) Name() string                 { return r.name }
-func (r *Ruleset) UntilFail() *rulesetUntilFail { return &rulesetUntilFail{r} }
-func (r *Ruleset) OneOf() *rulesetOneOf         { return &rulesetOneOf{r} }
-func (r *Ruleset) Parse(s string) (*ParseResult, error) {
+func (r *Sequence) Len() int                 { return len(r.list) }
+func (r *Sequence) Add(rules ...Parsable)    { r.list = append(r.list, rules...) }
+func (r *Sequence) Name() string             { return r.name }
+func (r *Sequence) UntilFail() *seqUntilFail { return &seqUntilFail{r} }
+func (r *Sequence) OneOf() *seqOneOf         { return &seqOneOf{r} }
+func (r *Sequence) Parse(s string) (*ParseResult, error) {
 	if len(r.list) == 0 || s == "" {
 		return nil, errors.NewBadMatchErr(r.name, s)
 	}
@@ -46,14 +46,14 @@ func (r *Ruleset) Parse(s string) (*ParseResult, error) {
 	return results, nil
 }
 
-type rulesetUntilFail struct {
-	*Ruleset
+type seqUntilFail struct {
+	*Sequence
 }
 
-func (r *rulesetUntilFail) Parse(s string) (*ParseResult, error) {
+func (r *seqUntilFail) Parse(s string) (*ParseResult, error) {
 	all := NewParseResult(r.name, nil, s)
 	for {
-		results, err := r.Ruleset.Parse(all.Rest())
+		results, err := r.Sequence.Parse(all.Rest())
 		if err != nil {
 			if all.Len() == 0 {
 				return nil, err
@@ -67,18 +67,18 @@ func (r *rulesetUntilFail) Parse(s string) (*ParseResult, error) {
 		}
 	}
 	if all.Len() == 0 {
-		return nil, errors.NewBadMatchErr(r.Ruleset.name, s)
+		return nil, errors.NewBadMatchErr(r.Sequence.name, s)
 	}
 	return all, nil
 }
 
-type rulesetOneOf struct {
-	*Ruleset
+type seqOneOf struct {
+	*Sequence
 }
 
-func (r *rulesetOneOf) Parse(s string) (*ParseResult, error) {
+func (r *seqOneOf) Parse(s string) (*ParseResult, error) {
 	all := NewParseResult(r.name, nil, s)
-	for _, p := range r.Ruleset.list {
+	for _, p := range r.Sequence.list {
 		results, err := p.Parse(all.Rest())
 		if err != nil {
 			continue
@@ -90,7 +90,7 @@ func (r *rulesetOneOf) Parse(s string) (*ParseResult, error) {
 	}
 
 	if all.Len() == 0 {
-		return nil, errors.NewBadMatchErr(r.Ruleset.name, s)
+		return nil, errors.NewBadMatchErr(r.Sequence.name, s)
 	}
 
 	return all, nil

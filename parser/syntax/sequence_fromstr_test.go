@@ -11,15 +11,15 @@ import (
 func TestRulesetFromStrs(t *testing.T) {
 	type rulesettest struct {
 		in   string
-		rs   *stx.Ruleset
+		rs   *stx.Sequence
 		want []string
 		rest string
 		err  error
 	}
 
-	rstests := make(map[*stx.Ruleset][]rulesettest)
+	rstests := make(map[*stx.Sequence][]rulesettest)
 
-	ruleset, err := stx.NewRulesetFromStrs(
+	ruleset, err := stx.NewSequenceFromStrs(
 		"alpha",
 		"ralpha")
 	if err != nil {
@@ -33,7 +33,7 @@ func TestRulesetFromStrs(t *testing.T) {
 		{".", ruleset, ss(), "", errs.ErrBadMatch},
 	}
 
-	ruleset, err = stx.NewRulesetFromStrs(
+	ruleset, err = stx.NewSequenceFromStrs(
 		"num",
 		"rnum",
 	)
@@ -47,7 +47,7 @@ func TestRulesetFromStrs(t *testing.T) {
 		{"123.", ruleset, ss("123"), ".", nil},
 	}
 
-	ruleset, err = stx.NewRulesetFromStrs(
+	ruleset, err = stx.NewSequenceFromStrs(
 		"alphanum",
 		"ralpha", "rnum",
 	)
@@ -64,7 +64,7 @@ func TestRulesetFromStrs(t *testing.T) {
 		{"a.1", ruleset, ss(), "", errs.ErrBadMatch},
 	}
 
-	ruleset, err = stx.NewRulesetFromStrs(
+	ruleset, err = stx.NewSequenceFromStrs(
 		"kv(var var)",
 		"ralpha", "c:, #1", "rnum",
 	)
@@ -87,7 +87,7 @@ func TestRulesetFromStrs(t *testing.T) {
 		{"a:1.", ruleset, ss("a", ":", "1"), ".", nil},
 	}
 
-	ruleset, err = stx.NewRulesetFromStrs(
+	ruleset, err = stx.NewSequenceFromStrs(
 		"obj(kv(var var))",
 		"c{, #1", "ralpha", "c:, #1", "ralpha", "c}, #1",
 	)
@@ -108,7 +108,7 @@ func TestRulesetFromStrs(t *testing.T) {
 		{"{a:x}.", ruleset, ss("{", "a", ":", "x", "}"), ".", nil},
 	}
 
-	ruleset, err = stx.NewRulesetFromStrs(
+	ruleset, err = stx.NewSequenceFromStrs(
 		"obj(kv(_var_ var))",
 		"c{, #1", "c_, #1", "ralpha", "c_, #1", "c:, #1", "ralpha", "c}, #1",
 	)
@@ -123,7 +123,7 @@ func TestRulesetFromStrs(t *testing.T) {
 		{".", ruleset, ss(), "", errs.ErrBadMatch},
 	}
 
-	ruleset, err = stx.NewRulesetFromStrs(
+	ruleset, err = stx.NewSequenceFromStrs(
 		"test special vals",
 		"c,, #1", "rnum", "c|, #1",
 	)
@@ -137,7 +137,7 @@ func TestRulesetFromStrs(t *testing.T) {
 		{",1|", ruleset, ss(",", "1", "|"), "", nil},
 	}
 
-	ruleset, err = stx.NewRulesetFromStrs(
+	ruleset, err = stx.NewSequenceFromStrs(
 		"alpha comma",
 		"ralpha, #1", "c,, #1", "ralpha, #1", "c,, #1", "ralpha, #1", "c,, #1",
 	)
@@ -150,7 +150,7 @@ func TestRulesetFromStrs(t *testing.T) {
 		{"a,b,c,", ruleset, ss("a", ",", "b", ",", "c", ","), "", nil},
 	}
 
-	ruleset, err = stx.NewRulesetFromStrs(
+	ruleset, err = stx.NewSequenceFromStrs(
 		"alpha3",
 		"ralpha, #1", "ralpha, #1", "ralpha, #1",
 	)
@@ -163,7 +163,7 @@ func TestRulesetFromStrs(t *testing.T) {
 		{"abc", ruleset, ss("a", "b", "c"), "", nil},
 	}
 
-	ruleset, err = stx.NewRulesetFromStrs(
+	ruleset, err = stx.NewSequenceFromStrs(
 		"capture",
 		"ralpha", "c:, g0", "rnum",
 	)
