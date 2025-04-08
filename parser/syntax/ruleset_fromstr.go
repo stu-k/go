@@ -14,6 +14,10 @@ type rulesetargs struct {
 }
 
 func NewRulesetFromStrs(name string, parts ...string) (*Ruleset, error) {
+	return newRulesetFromStrs(name, defaultRulemap, parts...)
+}
+
+func newRulesetFromStrs(name string, pmap map[string]*Rule, parts ...string) (*Ruleset, error) {
 	errFn := func(arg string, i, j int) error {
 		return fmt.Errorf(
 			"error creating ruleset: invalid arg \"%v\" in segment %d, arg %d",
@@ -41,7 +45,7 @@ func NewRulesetFromStrs(name string, parts ...string) (*Ruleset, error) {
 			switch rune(arg[0]) {
 
 			case 'r':
-				rul, ok := defaultRulemap[arg[1:]]
+				rul, ok := pmap[arg[1:]]
 				if !ok || rul == nil {
 					return nil, errFn(arg, i, j)
 				}
