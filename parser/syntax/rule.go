@@ -14,13 +14,13 @@ var defaultRulemap = map[string]*Rule{
 var RuleAny = &Rule{
 	name:    "any",
 	count:   -1,
-	check:   func(_ rune) bool { return true },
+	check:   func(_ string) bool { return true },
 	capture: true,
 }
 
-var RuleAlpha = RuleAny.Named("alpha").Check(unicode.IsLetter)
+var RuleAlpha = RuleAny.Named("alpha").CheckChar(unicode.IsLetter)
 
-var RuleNum = RuleAny.Named("num").Check(unicode.IsNumber)
+var RuleNum = RuleAny.Named("num").CheckChar(unicode.IsNumber)
 
 // Rule defines a set of variables to parse a token by
 type Rule struct {
@@ -35,7 +35,7 @@ type Rule struct {
 
 	// check is the fn used to validate if the characters
 	// in a string are valid for the rule
-	check func(rune) bool
+	check func(string) bool
 
 	// capture determines if the match should be returned
 	capture bool
@@ -72,9 +72,11 @@ func (a *Rule) Name() string {
 	return a.name
 }
 
-func (a *Rule) Check(fn func(rune) bool) *Rule {
+func (a *Rule) CheckChar(fn func(rune) bool) *Rule {
 	new := a.clone()
-	new.check = fn
+	new.check = func(s string) bool {
+		return len(s) > 0 && fn(rune(s[0]))
+	}
 	return new
 }
 
@@ -86,14 +88,14 @@ func (a *Rule) Capture(v bool) *Rule {
 
 func (a *Rule) Chars(s string) *Rule {
 	new := a.clone()
-	m := make(map[rune]struct{})
+	m := make(map[string]struct{})
 
 	for _, v := range s {
-		m[rune(v)] = struct{}{}
+		m[string(v)] = struct{}{}
 	}
 
-	check := func(r rune) bool {
-		_, ok := m[r]
+	check := func(str string) bool {
+		_, ok := m[str]
 		return ok
 	}
 
@@ -105,7 +107,12 @@ func (a *Rule) ToSeq() *Sequence {
 	s := NewSequence(a.name, a)
 	return s
 }
+
 func (a *Rule) Parse(s string) (*ParseResult, error) {
+	return a.parseChar(s)
+}
+
+func (a *Rule) parseChar(s string) (*ParseResult, error) {
 	useCount := a.count >= 0
 	if len(s) == 0 {
 		return returnPr(a.name, s, errors.NewBadMatchErr(a.name, s))
@@ -148,7 +155,7 @@ func (a *Rule) Parse(s string) (*ParseResult, error) {
 			}
 		}
 
-		ok := a.check(r)
+		ok := a.check(string(r))
 		if !ok {
 			err := checkEnd(countToUse)
 			if err != nil {

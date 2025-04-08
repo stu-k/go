@@ -86,7 +86,7 @@ func TestRule(t *testing.T) {
 		{"", "", "", errs.ErrBadMatch},
 	}
 
-	rulemap[stx.RuleAny.Check(unicode.IsNumber)] = []testobj{
+	rulemap[stx.RuleAny.CheckChar(unicode.IsNumber)] = []testobj{
 		{"1", "1", "", nil},
 		{"12", "12", "", nil},
 		{"123", "123", "", nil},

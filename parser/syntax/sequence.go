@@ -178,7 +178,7 @@ func newSequenceFromStrs(name string, pmap map[string]*Rule, parts ...string) (*
 			rule = rule.Count(sqa.count)
 		}
 		if sqa.char != 0 {
-			rule = rule.Check(func(r rune) bool { return r == sqa.char })
+			rule = rule.CheckChar(func(r rune) bool { return r == sqa.char })
 		}
 		if sqa.usecap {
 			rule = rule.Capture(sqa.cap)
