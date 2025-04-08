@@ -82,11 +82,10 @@ func NewRulesetUntilFail(name string, rules ...Parser) *RulesetUntilFail {
 }
 
 type rulesetargs struct {
-	rule             *Rule
-	char             rune
-	wrap, start, end rune
-	count            int
-	cap, usecap      bool
+	rule        *Rule
+	char        rune
+	count       int
+	cap, usecap bool
 }
 
 func NewRulesetFromStr(name, s string) (*Ruleset, error) {
@@ -133,18 +132,6 @@ func NewRulesetFromStr(name, s string) (*Ruleset, error) {
 				rsa.count = ct
 				continue
 
-			case 's':
-				rsa.start = r
-				continue
-
-			case 'e':
-				rsa.end = r
-				continue
-
-			case 'w':
-				rsa.wrap = r
-				continue
-
 			case 'c':
 				rsa.char = r
 				continue
@@ -171,15 +158,6 @@ func NewRulesetFromStr(name, s string) (*Ruleset, error) {
 		rule := NewRule()
 		if rsa.rule != nil {
 			rule = rsa.rule
-		}
-		if rsa.start != 0 {
-			rule = rule.Start(rsa.start)
-		}
-		if rsa.end != 0 {
-			rule = rule.End(rsa.end)
-		}
-		if rsa.wrap != 0 {
-			rule = rule.Wrap(rsa.wrap)
 		}
 		if rsa.count != 0 {
 			rule = rule.Count(rsa.count)

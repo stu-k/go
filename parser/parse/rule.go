@@ -10,8 +10,6 @@ import (
 var blank = &Rule{
 	name:        "blank",
 	count:       -1,
-	start:       0,
-	end:         0,
 	check:       func(_ rune) bool { return true },
 	ignoreSpace: true,
 	atLeastOne:  true,
@@ -45,10 +43,6 @@ type Rule struct {
 	//     count(3) for ab -> error
 	count int
 
-	// start, end are the characters the token is
-	// expected to be wrapped in to achieve tokenization
-	start, end rune
-
 	// check is the fn used to validate if the characters
 	// in a string are valid for the rule
 	check func(rune) bool
@@ -73,8 +67,6 @@ func (a *Rule) clone() *Rule {
 	return &Rule{
 		name:        a.name,
 		count:       a.count,
-		start:       a.start,
-		end:         a.end,
 		check:       a.check,
 		ignoreSpace: a.ignoreSpace,
 		atLeastOne:  a.atLeastOne,
@@ -90,25 +82,6 @@ func (a *Rule) Count(n int) *Rule {
 	new := a.clone()
 	new.count = n
 	return new
-}
-
-func (a *Rule) Start(r rune) *Rule {
-	new := a.clone()
-	new.start = r
-	return new
-}
-
-func (a *Rule) End(r rune) *Rule {
-	new := a.clone()
-	new.end = r
-	return new
-}
-
-func (a *Rule) Wrap(r rune) *Rule {
-	return a.
-		clone().
-		Start(r).
-		End(r)
 }
 
 func (a *Rule) Name(s string) *Rule {
@@ -130,13 +103,8 @@ func (a *Rule) Capture(v bool) *Rule {
 }
 
 func (a *Rule) Parse(s string) ([]string, string, error) {
-	useStart := a.start != 0
-	useEnd := a.end != 0
 	useCount := a.count >= 0
-
-	// fail if empty string or doesn't start with
-	// Rule.Start value if init
-	if s == "" || (useStart && rune(s[0]) != a.start) {
+	if s == "" {
 		return nil, "", errors.NewBadMatchErr(a.name, s)
 	}
 
@@ -145,10 +113,6 @@ func (a *Rule) Parse(s string) ([]string, string, error) {
 	// add Rule.Start into result and iterate
 	// past the value
 	toparse := s
-	if a.start != 0 {
-		result += string(s[0])
-		toparse = s[1:]
-	}
 
 	var count int
 	var ignoredSpaces int
@@ -165,9 +129,6 @@ func (a *Rule) Parse(s string) ([]string, string, error) {
 			return errors.NewBadMatchErr(a.name, s)
 		}
 
-		if useEnd && r != a.end {
-			return errors.NewBadMatchErr(a.name, s)
-		}
 		return nil
 	}
 
@@ -188,35 +149,12 @@ func (a *Rule) Parse(s string) ([]string, string, error) {
 			countToUse -= ignoredSpaces
 		}
 
-		if useCount && !useEnd {
+		if useCount {
 			if countToUse >= a.count {
 				if a.capture {
 					return []string{result}, s[i:], nil
 				}
 				return []string{}, s[i:], nil
-			}
-		}
-
-		if !useCount && useEnd {
-			if r == a.end {
-				result += string(r)
-				if a.capture {
-					return []string{result}, s[i+2:], nil
-				}
-				return []string{}, s[i+2:], nil
-			}
-		}
-
-		if useCount && useEnd {
-			if countToUse == a.count+1 {
-				if r == a.end {
-					result += string(r)
-					if a.capture {
-						return []string{result}, s[i+1:], nil
-					}
-					return []string{}, s[i+1:], nil
-				}
-				return nil, "", errors.NewBadMatchErr(a.name, s)
 			}
 		}
 

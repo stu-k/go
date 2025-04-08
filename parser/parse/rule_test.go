@@ -57,17 +57,6 @@ func TestAlpha(t *testing.T) {
 		{"", "", "", errs.ErrBadMatch},
 	}
 
-	rulemap[parse.Alpha.Wrap('_')] = []testobj{
-		{"_a_", "_a_", "", nil},
-		{"_ab_", "_ab_", "", nil},
-		{"_abc_", "_abc_", "", nil},
-		{"_abcdefg_", "_abcdefg_", "", nil},
-		{"_abc", "", "", errs.ErrBadMatch},
-
-		{"_a_bc", "_a_", "bc", nil},
-		{"_a.bc", "", "", errs.ErrBadMatch},
-	}
-
 	rulemap[parse.Alpha.Capture(false)] = []testobj{
 		{"a", "", "", nil},
 		{"ab", "", "", nil},

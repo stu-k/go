@@ -116,14 +116,16 @@ func TestRuleset(t *testing.T) {
 	ruleset = parse.NewRuleset(
 		"obj(kv(_var_ var))",
 		parse.FromChar('{'),
-		parse.Alpha.Wrap('_'),
+		parse.FromChar('_'),
+		parse.Alpha,
+		parse.FromChar('_'),
 		parse.FromChar(':'),
 		parse.Alpha,
 		parse.FromChar('}'),
 	)
 	rstests[ruleset] = []rulesettest{
-		{"{_a_:x}", ruleset, ss("{", "_a_", ":", "x", "}"), "", nil},
-		{"{_abc_:x}", ruleset, ss("{", "_abc_", ":", "x", "}"), "", nil},
+		{"{_a_:x}", ruleset, ss("{", "_", "a", "_", ":", "x", "}"), "", nil},
+		{"{_abc_:x}", ruleset, ss("{", "_", "abc", "_", ":", "x", "}"), "", nil},
 	}
 
 	for rs, tests := range rstests {
@@ -260,40 +262,21 @@ func TestRulesetFromString(t *testing.T) {
 
 	ruleset, err = parse.NewRulesetFromStr(
 		"obj(kv(_var_ var))",
-		"c{, #1 | ralpha, w_ | c:, #1 | ralpha | c}, #1",
+		"c{, #1 | c_, #1 | ralpha | c_, #1 | c:, #1 | ralpha | c}, #1",
 	)
 	if err != nil {
 		t.Fatalf("ruleset creation failed: %v", err)
 	}
 
 	rstests[ruleset] = []rulesettest{
-		{"{_a_:x}", ruleset, ss("{", "_a_", ":", "x", "}"), "", nil},
+		{"{_a_:x}", ruleset, ss("{", "_", "a", "_", ":", "x", "}"), "", nil},
 
-		{"{_abc_:xyz}", ruleset, ss("{", "_abc_", ":", "xyz", "}"), "", nil},
-
-		{".", ruleset, nil, "", errs.ErrBadMatch},
-		{".{_a_:x}", ruleset, nil, "", errs.ErrBadMatch},
-		{"{._a_:x}", ruleset, nil, "", errs.ErrBadMatch},
-		{"{_.a_:x}", ruleset, nil, "", errs.ErrBadMatch},
-		{"{_a._:x}", ruleset, nil, "", errs.ErrBadMatch},
-		{"{_a_.:x}", ruleset, nil, "", errs.ErrBadMatch},
-		{"{_a_:.x}", ruleset, nil, "", errs.ErrBadMatch},
-		{"{_a_:x.}", ruleset, nil, "", errs.ErrBadMatch},
-		{"{_a_:x}.", ruleset, ss("{", "_a_", ":", "x", "}"), ".", nil},
-
-		{" {_a_:x}", ruleset, ss("{", "_a_", ":", "x", "}"), "", nil},
-		{"{ _a_:x}", ruleset, ss("{", "_a_", ":", "x", "}"), "", nil},
-		{"{_ a_:x}", ruleset, ss("{", "_a_", ":", "x", "}"), "", nil},
-		{"{_a_ :x}", ruleset, ss("{", "_a_", ":", "x", "}"), "", nil},
-		{"{_a_: x}", ruleset, ss("{", "_a_", ":", "x", "}"), "", nil},
-		{"{_a_:x }", ruleset, ss("{", "_a_", ":", "x", "}"), "", nil},
-		{"{_a_:x} ", ruleset, ss("{", "_a_", ":", "x", "}"), "", nil},
-		{"{_a_:x} .", ruleset, ss("{", "_a_", ":", "x", "}"), ".", nil},
+		{"{_abc_:xyz}", ruleset, ss("{", "_", "abc", "_", ":", "xyz", "}"), "", nil},
 	}
 
 	ruleset, err = parse.NewRulesetFromStr(
 		"test special vals",
-		"c,, #1 | rnum, w| | c,, #2",
+		"c,, #1 | rnum | c|, #1",
 	)
 	if err != nil {
 		t.Fatalf("ruleset creation failed: %v", err)
@@ -302,7 +285,7 @@ func TestRulesetFromString(t *testing.T) {
 	rstests[ruleset] = []rulesettest{
 		{".", ruleset, ss(), "", errs.ErrBadMatch},
 
-		{",|123|,,", ruleset, ss(",", "|123|", ",,"), "", nil},
+		{",1|", ruleset, ss(",", "1", "|"), "", nil},
 	}
 
 	ruleset, err = parse.NewRulesetFromStr(
@@ -431,15 +414,17 @@ func TestRulesetUntilFail(t *testing.T) {
 		{".", rs, ss(), "", errs.ErrBadMatch},
 	}
 
-	rs, err = mk("str: alpha",
-		"ralpha, w\" | c:, #1 | ralpha",
+	rs, err = mk("str: num",
+		"ralpha | c:, #1 | rnum",
 	)
 	if err != nil {
 		t.Fatalf("ruleset creation failed: %v", err)
 	}
 	rstests[rs] = []rulesettest{
-		{"\"key\": value", rs, ss("\"key\"", ":", "value"), "", nil},
-		{"\"a\": b \"c\": d", rs, ss("\"a\"", ":", "b", "\"c\"", ":", "d"), "", nil},
+		{"abc: 123", rs, ss("abc", ":", "123"), "", nil},
+		{"a: 1 b: 2", rs, ss("a", ":", "1", "b", ":", "2"), "", nil},
+		{"a:1", rs, ss("a", ":", "1"), "", nil},
+		{"a:1 b:", rs, ss("a", ":", "1"), "b:", nil},
 
 		{".", rs, ss(), "", errs.ErrBadMatch},
 	}
