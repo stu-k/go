@@ -25,7 +25,7 @@ func (r *Sequence) UntilFail() *seqUntilFail { return &seqUntilFail{r} }
 func (r *Sequence) OneOf() *seqOneOf         { return &seqOneOf{r} }
 func (r *Sequence) Parse(s string) (*ParseResult, error) {
 	if len(r.list) == 0 || s == "" {
-		return NewParseResult(r.name, nil, s), errors.NewBadMatchErr(r.name, s)
+		return prErr(r.name, s, errors.NewBadMatchErr(r.name, s))
 	}
 
 	results := NewParseResult(r.name, nil, s)
@@ -36,7 +36,7 @@ func (r *Sequence) Parse(s string) (*ParseResult, error) {
 		}
 
 		if result == nil {
-			return NewParseResult(r.name, nil, s), errors.NewBadMatchErr(r.name, s)
+			return prErr(r.name, s, errors.NewBadMatchErr(r.name, s))
 		}
 
 		results.Append(result)
@@ -67,7 +67,7 @@ func (r *seqUntilFail) Parse(s string) (*ParseResult, error) {
 		}
 	}
 	if all.Len() == 0 {
-		return NewParseResult(r.name, nil, s), errors.NewBadMatchErr(r.Sequence.name, s)
+		return prErr(r.name, s, errors.NewBadMatchErr(r.Sequence.name, s))
 	}
 	return all, nil
 }
@@ -90,8 +90,12 @@ func (r *seqOneOf) Parse(s string) (*ParseResult, error) {
 	}
 
 	if all.Len() == 0 {
-		return NewParseResult(r.name, nil, s), errors.NewBadMatchErr(r.Sequence.name, s)
+		return prErr(r.name, s, errors.NewBadMatchErr(r.Sequence.name, s))
 	}
 
 	return all, nil
+}
+
+func prErr(n, s string, err error) (*ParseResult, error) {
+	return NewParseResult(n, nil, s), err
 }
