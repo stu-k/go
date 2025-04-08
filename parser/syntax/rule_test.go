@@ -13,7 +13,7 @@ var ss = func(s ...string) []string {
 	if len(s) == 0 {
 		return nil
 	}
-	if len(s) == 1 && s[0] == "" {
+	if len(s) == 1 && len(s[0]) == 0 {
 		return nil
 	}
 	return s
