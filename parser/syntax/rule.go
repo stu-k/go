@@ -107,6 +107,10 @@ func (a *Rule) Chars(s string) *Rule {
 	return new
 }
 
+func (a *Rule) ToSeq() *Sequence {
+	s := NewSequence(a.name, a)
+	return s
+}
 func (a *Rule) Parse(s string) (*ParseResult, error) {
 	useCount := a.count >= 0
 	if s == "" {
