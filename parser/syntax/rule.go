@@ -108,7 +108,7 @@ func (a *Rule) ToSeq() *Sequence {
 func (a *Rule) Parse(s string) (*ParseResult, error) {
 	useCount := a.count >= 0
 	if s == "" {
-		return prErr(a.name, s, errors.NewBadMatchErr(a.name, s))
+		return returnPr(a.name, s, errors.NewBadMatchErr(a.name, s))
 	}
 
 	var result string
@@ -152,7 +152,7 @@ func (a *Rule) Parse(s string) (*ParseResult, error) {
 		if !ok {
 			err := checkEnd(countToUse)
 			if err != nil {
-				return prErr(a.name, s, err)
+				return returnPr(a.name, s, err)
 			}
 
 			if a.capture {
@@ -167,7 +167,7 @@ func (a *Rule) Parse(s string) (*ParseResult, error) {
 
 	err := checkEnd(count)
 	if err != nil {
-		return prErr(a.name, s, err)
+		return returnPr(a.name, s, err)
 	}
 
 	if a.capture {
