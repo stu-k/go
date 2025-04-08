@@ -52,3 +52,7 @@ func (p *ParseResult) NameMap() map[string][]string {
 	}
 	return m
 }
+
+func (p *ParseResult) IsEmpy() bool {
+	return len(p.results) == 0 && len(p.resultsStrs) == 0 && len(p.rest) == 0
+}
