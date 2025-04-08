@@ -1,25 +1,27 @@
-package parse_test
+package syntax_test
 
 import (
 	"errors"
 	"testing"
 
 	errs "github.com/stu-k/go/parser/errors"
-	"github.com/stu-k/go/parser/parse"
+	stx "github.com/stu-k/go/parser/syntax"
 )
 
-func TestRulesetFromString(t *testing.T) {
+func TestRulesetFromStrs(t *testing.T) {
 	type rulesettest struct {
 		in   string
-		rs   *parse.Ruleset
+		rs   *stx.Ruleset
 		want []string
 		rest string
 		err  error
 	}
 
-	rstests := make(map[*parse.Ruleset][]rulesettest)
+	rstests := make(map[*stx.Ruleset][]rulesettest)
 
-	ruleset, err := parse.NewRulesetFromStr("alpha", "ralpha")
+	ruleset, err := stx.NewRulesetFromStrs(
+		"alpha",
+		"ralpha")
 	if err != nil {
 		t.Fatalf("ruleset creation failed: %v", err)
 	}
@@ -31,7 +33,10 @@ func TestRulesetFromString(t *testing.T) {
 		{".", ruleset, ss(), "", errs.ErrBadMatch},
 	}
 
-	ruleset, err = parse.NewRulesetFromStr("num", "rnum")
+	ruleset, err = stx.NewRulesetFromStrs(
+		"num",
+		"rnum",
+	)
 	if err != nil {
 		t.Fatalf("ruleset creation failed: %v", err)
 	}
@@ -42,7 +47,10 @@ func TestRulesetFromString(t *testing.T) {
 		{"123.", ruleset, ss("123"), ".", nil},
 	}
 
-	ruleset, err = parse.NewRulesetFromStr("alphanum", "ralpha | rnum")
+	ruleset, err = stx.NewRulesetFromStrs(
+		"alphanum",
+		"ralpha", "rnum",
+	)
 	if err != nil {
 		t.Fatalf("ruleset creation failed: %v", err)
 	}
@@ -56,9 +64,9 @@ func TestRulesetFromString(t *testing.T) {
 		{"a.1", ruleset, ss(), "", errs.ErrBadMatch},
 	}
 
-	ruleset, err = parse.NewRulesetFromStr(
+	ruleset, err = stx.NewRulesetFromStrs(
 		"kv(var var)",
-		"ralpha | c:, #1 | rnum",
+		"ralpha", "c:, #1", "rnum",
 	)
 	if err != nil {
 		t.Fatalf("ruleset creation failed: %v", err)
@@ -79,9 +87,9 @@ func TestRulesetFromString(t *testing.T) {
 		{"a:1.", ruleset, ss("a", ":", "1"), ".", nil},
 	}
 
-	ruleset, err = parse.NewRulesetFromStr(
+	ruleset, err = stx.NewRulesetFromStrs(
 		"obj(kv(var var))",
-		"c{, #1 | ralpha | c:, #1 | ralpha | c}, #1",
+		"c{, #1", "ralpha", "c:, #1", "ralpha", "c}, #1",
 	)
 	if err != nil {
 		t.Fatalf("ruleset creation failed: %v", err)
@@ -100,9 +108,9 @@ func TestRulesetFromString(t *testing.T) {
 		{"{a:x}.", ruleset, ss("{", "a", ":", "x", "}"), ".", nil},
 	}
 
-	ruleset, err = parse.NewRulesetFromStr(
+	ruleset, err = stx.NewRulesetFromStrs(
 		"obj(kv(_var_ var))",
-		"c{, #1 | c_, #1 | ralpha | c_, #1 | c:, #1 | ralpha | c}, #1",
+		"c{, #1", "c_, #1", "ralpha", "c_, #1", "c:, #1", "ralpha", "c}, #1",
 	)
 	if err != nil {
 		t.Fatalf("ruleset creation failed: %v", err)
@@ -115,9 +123,9 @@ func TestRulesetFromString(t *testing.T) {
 		{".", ruleset, ss(), "", errs.ErrBadMatch},
 	}
 
-	ruleset, err = parse.NewRulesetFromStr(
+	ruleset, err = stx.NewRulesetFromStrs(
 		"test special vals",
-		"c,, #1 | rnum | c|, #1",
+		"c,, #1", "rnum", "c|, #1",
 	)
 	if err != nil {
 		t.Fatalf("ruleset creation failed: %v", err)
@@ -129,9 +137,9 @@ func TestRulesetFromString(t *testing.T) {
 		{",1|", ruleset, ss(",", "1", "|"), "", nil},
 	}
 
-	ruleset, err = parse.NewRulesetFromStr(
+	ruleset, err = stx.NewRulesetFromStrs(
 		"alpha comma",
-		"ralpha, #1 | c,, #1 | ralpha, #1 | c,, #1 | ralpha, #1 | c,, #1",
+		"ralpha, #1", "c,, #1", "ralpha, #1", "c,, #1", "ralpha, #1", "c,, #1",
 	)
 	if err != nil {
 		t.Fatalf("ruleset creation failed: %v", err)
@@ -142,8 +150,9 @@ func TestRulesetFromString(t *testing.T) {
 		{"a,b,c,", ruleset, ss("a", ",", "b", ",", "c", ","), "", nil},
 	}
 
-	ruleset, err = parse.NewRulesetFromStr("alpha3",
-		"ralpha, #1 | ralpha, #1 | ralpha, #1",
+	ruleset, err = stx.NewRulesetFromStrs(
+		"alpha3",
+		"ralpha, #1", "ralpha, #1", "ralpha, #1",
 	)
 	if err != nil {
 		t.Fatalf("ruleset creation failed: %v", err)
@@ -154,8 +163,9 @@ func TestRulesetFromString(t *testing.T) {
 		{"abc", ruleset, ss("a", "b", "c"), "", nil},
 	}
 
-	ruleset, err = parse.NewRulesetFromStr("capture",
-		"ralpha | c:, g0 | rnum",
+	ruleset, err = stx.NewRulesetFromStrs(
+		"capture",
+		"ralpha", "c:, g0", "rnum",
 	)
 	if err != nil {
 		t.Fatalf("ruleset creation failed: %v", err)

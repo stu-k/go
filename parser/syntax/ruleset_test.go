@@ -1,11 +1,11 @@
-package parse_test
+package syntax_test
 
 import (
 	"errors"
 	"testing"
 
 	errs "github.com/stu-k/go/parser/errors"
-	"github.com/stu-k/go/parser/parse"
+	stx "github.com/stu-k/go/parser/syntax"
 )
 
 var ss = func(s ...string) []string {
@@ -32,15 +32,15 @@ var eq = func(a, b []string) bool {
 func TestRuleset(t *testing.T) {
 	type rulesettest struct {
 		in   string
-		rs   *parse.Ruleset
+		rs   *stx.Ruleset
 		want []string
 		rest string
 		err  error
 	}
 
-	rstests := make(map[*parse.Ruleset][]rulesettest)
+	rstests := make(map[*stx.Ruleset][]rulesettest)
 
-	ruleset := parse.NewRuleset("alpha", parse.RuleAlpha)
+	ruleset := stx.NewRuleset("alpha", stx.RuleAlpha)
 	rstests[ruleset] = []rulesettest{
 		{"abc", ruleset, ss("abc"), "", nil},
 		{"ab.c", ruleset, ss("ab"), ".c", nil},
@@ -48,17 +48,17 @@ func TestRuleset(t *testing.T) {
 		{".", ruleset, ss(), "", errs.ErrBadMatch},
 	}
 
-	ruleset = parse.NewRuleset("num", parse.RuleNum)
+	ruleset = stx.NewRuleset("num", stx.RuleNum)
 	rstests[ruleset] = []rulesettest{
 		{"123", ruleset, ss("123"), "", nil},
 		{"12.3", ruleset, ss("12"), ".3", nil},
 		{"123.", ruleset, ss("123"), ".", nil},
 	}
 
-	ruleset = parse.NewRuleset(
+	ruleset = stx.NewRuleset(
 		"alphanum",
-		parse.RuleAlpha,
-		parse.RuleNum,
+		stx.RuleAlpha,
+		stx.RuleNum,
 	)
 	rstests[ruleset] = []rulesettest{
 		{"a1", ruleset, ss("a", "1"), "", nil},
@@ -69,11 +69,11 @@ func TestRuleset(t *testing.T) {
 		{"a.1", ruleset, ss(), "", errs.ErrBadMatch},
 	}
 
-	ruleset = parse.NewRuleset(
+	ruleset = stx.NewRuleset(
 		"kv(var var)",
-		parse.RuleAlpha,
-		parse.RuleAny.Chars(":"),
-		parse.RuleNum,
+		stx.RuleAlpha,
+		stx.RuleAny.Chars(":"),
+		stx.RuleNum,
 	)
 	rstests[ruleset] = []rulesettest{
 		{"a:1", ruleset, ss("a", ":", "1"), "", nil},
@@ -85,13 +85,13 @@ func TestRuleset(t *testing.T) {
 		{"a:1.", ruleset, ss("a", ":", "1"), ".", nil},
 	}
 
-	ruleset = parse.NewRuleset(
+	ruleset = stx.NewRuleset(
 		"obj(kv(var var))",
-		parse.RuleAny.Chars("{"),
-		parse.RuleAlpha,
-		parse.RuleAny.Chars(":"),
-		parse.RuleAlpha,
-		parse.RuleAny.Chars("}"),
+		stx.RuleAny.Chars("{"),
+		stx.RuleAlpha,
+		stx.RuleAny.Chars(":"),
+		stx.RuleAlpha,
+		stx.RuleAny.Chars("}"),
 	)
 	rstests[ruleset] = []rulesettest{
 		{"{a:x}", ruleset, ss("{", "a", ":", "x", "}"), "", nil},
@@ -100,15 +100,15 @@ func TestRuleset(t *testing.T) {
 		{"{a:x}...", ruleset, ss("{", "a", ":", "x", "}"), "...", nil},
 	}
 
-	ruleset = parse.NewRuleset(
+	ruleset = stx.NewRuleset(
 		"obj(kv(_var_ var))",
-		parse.RuleAny.Chars("{"),
-		parse.RuleAny.Chars("_"),
-		parse.RuleAlpha,
-		parse.RuleAny.Chars("_"),
-		parse.RuleAny.Chars(":"),
-		parse.RuleAlpha,
-		parse.RuleAny.Chars("}"),
+		stx.RuleAny.Chars("{"),
+		stx.RuleAny.Chars("_"),
+		stx.RuleAlpha,
+		stx.RuleAny.Chars("_"),
+		stx.RuleAny.Chars(":"),
+		stx.RuleAlpha,
+		stx.RuleAny.Chars("}"),
 	)
 	rstests[ruleset] = []rulesettest{
 		{"{_a_:x}", ruleset, ss("{", "_", "a", "_", ":", "x", "}"), "", nil},
@@ -136,8 +136,8 @@ func TestRuleset(t *testing.T) {
 }
 
 func TestRulesetUntilFail(t *testing.T) {
-	mk := func(s, r string) (*parse.RulesetUntilFail, error) {
-		rfs, err := parse.NewRulesetFromStr(s, r)
+	mk := func(s string, r ...string) (*stx.RulesetUntilFail, error) {
+		rfs, err := stx.NewRulesetFromStrs(s, r...)
 		if err != nil {
 			return nil, err
 		}
@@ -146,15 +146,18 @@ func TestRulesetUntilFail(t *testing.T) {
 
 	type rulesettest struct {
 		in   string
-		rs   *parse.RulesetUntilFail
+		rs   *stx.RulesetUntilFail
 		want []string
 		rest string
 		err  error
 	}
 
-	rstests := make(map[*parse.RulesetUntilFail][]rulesettest)
+	rstests := make(map[*stx.RulesetUntilFail][]rulesettest)
 
-	rs, err := mk("alpha 1", "ralpha, #1")
+	rs, err := mk(
+		"alpha 1",
+		"ralpha, #1",
+	)
 	if err != nil {
 		t.Fatalf("ruleset creation failed: %v", err)
 	}
@@ -169,7 +172,10 @@ func TestRulesetUntilFail(t *testing.T) {
 		{".", rs, ss(), "", errs.ErrBadMatch},
 	}
 
-	rs, err = mk("alpha comma", "ralpha, #1 | c,, #1")
+	rs, err = mk(
+		"alpha comma",
+		"ralpha, #1", "c,, #1",
+	)
 	if err != nil {
 		t.Fatalf("ruleset creation failed: %v", err)
 	}
@@ -182,8 +188,9 @@ func TestRulesetUntilFail(t *testing.T) {
 		{".", rs, ss(), "", errs.ErrBadMatch},
 	}
 
-	rs, err = mk("str: num",
-		"ralpha | c:, #1 | rnum",
+	rs, err = mk(
+		"str: num",
+		"ralpha", "c:, #1", "rnum",
 	)
 	if err != nil {
 		t.Fatalf("ruleset creation failed: %v", err)

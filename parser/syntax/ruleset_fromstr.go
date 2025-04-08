@@ -1,4 +1,4 @@
-package parse
+package syntax
 
 import (
 	"fmt"
@@ -13,7 +13,7 @@ type rulesetargs struct {
 	cap, usecap bool
 }
 
-func NewRulesetFromStr(name, s string) (*Ruleset, error) {
+func NewRulesetFromStrs(name string, parts ...string) (*Ruleset, error) {
 	errFn := func(arg string, i, j int) error {
 		return fmt.Errorf(
 			"error creating ruleset: invalid arg \"%v\" in segment %d, arg %d",
@@ -23,9 +23,8 @@ func NewRulesetFromStr(name, s string) (*Ruleset, error) {
 
 	rs := NewRuleset(name)
 
-	parts := strings.Split(s, " | ")
 	if len(parts) == 0 {
-		return nil, fmt.Errorf("error creating ruleset: invalid string \"%s\"", s)
+		return nil, fmt.Errorf("error creating ruleset: invalid string \"%s\"", parts)
 	}
 
 	for i, part := range parts {

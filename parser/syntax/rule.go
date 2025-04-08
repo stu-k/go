@@ -1,4 +1,4 @@
-package parse
+package syntax
 
 import (
 	"unicode"

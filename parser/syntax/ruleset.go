@@ -1,4 +1,4 @@
-package parse
+package syntax
 
 import (
 	"github.com/stu-k/go/parser/errors"
