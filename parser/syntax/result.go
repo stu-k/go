@@ -44,3 +44,11 @@ func (p *ParseResult) Len() int {
 	}
 	return len(p.Strings())
 }
+
+func (p *ParseResult) NameMap() map[string][]string {
+	m := make(map[string][]string)
+	for _, result := range p.results {
+		m[result.Name()] = result.Strings()
+	}
+	return m
+}

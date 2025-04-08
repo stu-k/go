@@ -9,6 +9,28 @@ import (
 	stx "github.com/stu-k/go/parser/syntax"
 )
 
+var ss = func(s ...string) []string {
+	if len(s) == 0 {
+		return nil
+	}
+	if len(s) == 1 && s[0] == "" {
+		return nil
+	}
+	return s
+}
+
+var eq = func(a, b []string) bool {
+	if len(a) != len(b) {
+		return false
+	}
+	for i, v := range a {
+		if b[i] != v {
+			return false
+		}
+	}
+	return true
+}
+
 func TestRule(t *testing.T) {
 	type testobj struct {
 		in   string

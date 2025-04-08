@@ -8,27 +8,6 @@ import (
 	stx "github.com/stu-k/go/parser/syntax"
 )
 
-var ss = func(s ...string) []string {
-	if len(s) == 0 {
-		return nil
-	}
-	if len(s) == 1 && s[0] == "" {
-		return nil
-	}
-	return s
-}
-var eq = func(a, b []string) bool {
-	if len(a) != len(b) {
-		return false
-	}
-	for i, v := range a {
-		if b[i] != v {
-			return false
-		}
-	}
-	return true
-}
-
 func TestRuleset(t *testing.T) {
 	type rulesettest struct {
 		in   string
@@ -234,6 +213,124 @@ func TestRulesetUntilFail(t *testing.T) {
 
 				if got.Rest() != test.rest {
 					t.Errorf("for \"%v\" expected remainder \"%v\"; got \"%v\"", test.in, test.rest, got.Rest())
+				}
+			}
+		})
+	}
+}
+
+func TestRulesetOneOf(t *testing.T) {
+	mk := func(s string, r ...string) (stx.Parsable, error) {
+		rfs, err := stx.NewRulesetFromStrs(s, r...)
+		if err != nil {
+			return nil, err
+		}
+		return rfs.OneOf(), nil
+	}
+
+	type rulesettest struct {
+		in   string
+		want []string
+		err  error
+	}
+
+	rstests := make(map[stx.Parsable][]rulesettest)
+
+	rs1, err := mk(
+		"alp",
+		"ralpha",
+	)
+	if err != nil {
+		t.Fatalf("ruleset creation failed: %v", err)
+	}
+
+	rs2, err := mk(
+		"1a",
+		"ca, #1",
+	)
+	if err != nil {
+		t.Fatalf("ruleset creation failed: %v", err)
+	}
+
+	rs3, err := mk(
+		"2alp",
+		"ralpha, #2",
+	)
+	if err != nil {
+		t.Fatalf("ruleset creation failed: %v", err)
+	}
+
+	rs4, err := mk(
+		"2b",
+		"cb, #2",
+	)
+	if err != nil {
+		t.Fatalf("ruleset creation failed: %v", err)
+	}
+
+	rs := stx.NewRuleset("a0.", rs1, rs2, rs3, rs4).OneOf()
+	rstests[rs] = []rulesettest{
+		{"a", ss("alp", "1a"), nil},
+		{"aa", ss("alp", "1a", "2alp"), nil},
+		{"aaa", ss("alp", "1a", "2alp"), nil},
+
+		{"b", ss("alp"), nil},
+		{"bb", ss("alp", "2b", "2alp"), nil},
+		{"bbb", ss("alp", "2b", "2alp"), nil},
+
+		{"x", ss("alp"), nil},
+		{"xy", ss("alp", "2alp"), nil},
+
+		{"", ss(), errs.ErrBadMatch},
+		{".", ss(), errs.ErrBadMatch},
+	}
+
+	rs1, err = mk(
+		"var",
+		"ralpha",
+	)
+	if err != nil {
+		t.Fatalf("ruleset creation failed: %v", err)
+	}
+
+	rs2, err = mk(
+		"str",
+		"c', #1", "ralpha", "c', #1",
+	)
+	if err != nil {
+		t.Fatalf("ruleset creation failed: %v", err)
+	}
+
+	rs = stx.NewRuleset("str / var", rs1, rs2).OneOf()
+	rstests[rs] = []rulesettest{
+		{"'str'", ss("str"), nil},
+		{"var", ss("var"), nil},
+
+		{"", ss(), errs.ErrBadMatch},
+		{".", ss(), errs.ErrBadMatch},
+	}
+
+	for rs, tests := range rstests {
+		t.Run(rs.Name(), func(t *testing.T) {
+			for _, test := range tests {
+				got, err := rs.Parse(test.in)
+				if !errors.Is(err, test.err) {
+					t.Fatalf("for \"%v\" expected error \"%v\"; got \"%v\"", test.in, test.err, err)
+				}
+
+				if err != nil {
+					return
+				}
+
+				if got == nil {
+					t.Fatalf("for \"%v\" expected output not to be nil", test.in)
+				}
+
+				for _, v := range test.want {
+					_, ok := got.NameMap()[v]
+					if !ok {
+						t.Fatalf("expected key \"%v\" in nameMap %v", v, got.NameMap())
+					}
 				}
 			}
 		})
