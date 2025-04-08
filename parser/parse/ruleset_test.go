@@ -305,6 +305,111 @@ func TestRulesetFromString(t *testing.T) {
 		{",|123|,,", ruleset, ss(",", "|123|", ",,"), "", nil},
 	}
 
+	ruleset, err = parse.NewRulesetFromStr(
+		"alpha comma",
+		"ralpha, #1 | c,, #1 | ralpha, #1 | c,, #1 | ralpha, #1 | c,, #1",
+	)
+	if err != nil {
+		t.Fatalf("ruleset creation failed: %v", err)
+	}
+
+	rstests[ruleset] = []rulesettest{
+		{".", ruleset, ss(), "", errs.ErrBadMatch},
+		{"a, b, c,", ruleset, ss("a", ",", "b", ",", "c", ","), "", nil},
+	}
+
+	ruleset, err = parse.NewRulesetFromStr("alpha3",
+		"ralpha, #1 | ralpha, #1 | ralpha, #1",
+	)
+	if err != nil {
+		t.Fatalf("ruleset creation failed: %v", err)
+	}
+
+	rstests[ruleset] = []rulesettest{
+		{".", ruleset, ss(), "", errs.ErrBadMatch},
+		{"abc", ruleset, ss("a", "b", "c"), "", nil},
+	}
+
+	for rs, tests := range rstests {
+		t.Run(rs.Name(), func(t *testing.T) {
+			for _, test := range tests {
+				got, rest, err := test.rs.Parse(test.in)
+				if !eq(got, test.want) {
+					t.Errorf("for \"%v\" expected output \"%v\"; got \"%v\"", test.in, test.want, got)
+				}
+
+				if rest != test.rest {
+					t.Errorf("for \"%v\" expected remainder \"%v\"; got \"%v\"", test.in, test.rest, rest)
+				}
+				if !errors.Is(err, test.err) {
+					t.Errorf("for \"%v\" expected error \"%v\"; got \"%v\"", test.in, test.err, err)
+				}
+
+			}
+		})
+	}
+}
+
+func TestRulesetUntilFail(t *testing.T) {
+	ss := func(s ...string) []string { return s }
+	eq := func(a, b []string) bool {
+		if len(a) != len(b) {
+			return false
+		}
+		for i, v := range a {
+			if b[i] != v {
+				return false
+			}
+		}
+		return true
+	}
+	mk := func(r string) (*parse.RulesetUntilFail, error) {
+		rfs, err := parse.NewRulesetFromStr(r, r)
+		if err != nil {
+			return nil, err
+		}
+		return rfs.UntilFail(), nil
+	}
+
+	type rulesettest struct {
+		in   string
+		rs   *parse.RulesetUntilFail
+		want []string
+		rest string
+		err  error
+	}
+
+	rstests := make(map[*parse.RulesetUntilFail][]rulesettest)
+
+	rs, err := mk("ralpha, #1")
+	if err != nil {
+		t.Fatalf("ruleset creation failed: %v", err)
+	}
+	rstests[rs] = []rulesettest{
+		{"a", rs, ss("a"), "", nil},
+		{"ab", rs, ss("a", "b"), "", nil},
+		{"abc", rs, ss("a", "b", "c"), "", nil},
+		{"xyz", rs, ss("x", "y", "z"), "", nil},
+
+		{"a.", rs, ss("a"), ".", nil},
+		{"ab.", rs, ss("a", "b"), ".", nil},
+
+		{".a", rs, ss(), "", errs.ErrBadMatch},
+	}
+
+	rs, err = mk("ralpha, #1 | c,, #1")
+	if err != nil {
+		t.Fatalf("ruleset creation failed: %v", err)
+	}
+	rstests[rs] = []rulesettest{
+		{"a,", rs, ss("a", ","), "", nil},
+		{"a,b,", rs, ss("a", ",", "b", ","), "", nil},
+		{"a,b", rs, ss("a", ","), "b", nil},
+		{"a ,", rs, ss("a", ","), "", nil},
+
+		{".", rs, ss(), "", errs.ErrBadMatch},
+	}
+
 	for rs, tests := range rstests {
 		t.Run(rs.Name(), func(t *testing.T) {
 			for _, test := range tests {
