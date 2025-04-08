@@ -19,7 +19,7 @@ func TestRule(t *testing.T) {
 
 	rulemap := make(map[*parse.Rule][]testobj)
 
-	rulemap[parse.Alpha] = []testobj{
+	rulemap[parse.RuleAlpha] = []testobj{
 		{"abc", "abc", "", nil},
 		{"   abc", "abc", "", nil},
 		{"   a   bc", "abc", "", nil},
@@ -35,7 +35,7 @@ func TestRule(t *testing.T) {
 		{"", "", "", errs.ErrBadMatch},
 	}
 
-	rulemap[parse.Alpha.Count(3)] = []testobj{
+	rulemap[parse.RuleAlpha.Count(3)] = []testobj{
 		{"abc", "abc", "", nil},
 		{"abcd", "abc", "d", nil},
 		{"abc.", "abc", ".", nil},
@@ -58,7 +58,7 @@ func TestRule(t *testing.T) {
 		{"", "", "", errs.ErrBadMatch},
 	}
 
-	rulemap[parse.Alpha.Capture(false)] = []testobj{
+	rulemap[parse.RuleAlpha.Capture(false)] = []testobj{
 		{"a", "", "", nil},
 		{"ab", "", "", nil},
 		{"abc", "", "", nil},
@@ -68,7 +68,7 @@ func TestRule(t *testing.T) {
 		{".", "", "", errs.ErrBadMatch},
 	}
 
-	rulemap[parse.Alpha.Check(unicode.IsNumber)] = []testobj{
+	rulemap[parse.RuleAlpha.Check(unicode.IsNumber)] = []testobj{
 		{"1", "1", "", nil},
 		{"12", "12", "", nil},
 		{"123", "123", "", nil},
@@ -78,7 +78,7 @@ func TestRule(t *testing.T) {
 		{".", "", "", errs.ErrBadMatch},
 	}
 
-	rulemap[parse.Alpha.IgnoreSpace(false)] = []testobj{
+	rulemap[parse.RuleAlpha.IgnoreSpace(false)] = []testobj{
 		{"a", "a", "", nil},
 
 		{"a ", "a", " ", nil},

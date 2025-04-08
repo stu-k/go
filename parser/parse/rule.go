@@ -1,14 +1,18 @@
 package parse
 
 import (
-	"fmt"
 	"unicode"
 
 	"github.com/stu-k/go/parser/errors"
 )
 
-var blank = &Rule{
-	name:        "blank",
+var defaultRulemap = map[string]*Rule{
+	"alpha": RuleAlpha,
+	"num":   RuleNum,
+}
+
+var RuleAny = &Rule{
+	name:        "any",
 	count:       -1,
 	check:       func(_ rune) bool { return true },
 	ignoreSpace: true,
@@ -16,21 +20,9 @@ var blank = &Rule{
 	capture:     true,
 }
 
-var Alpha = blank.Name("alpha").Check(unicode.IsLetter)
+var RuleAlpha = RuleAny.Name("alpha").Check(unicode.IsLetter)
 
-var Numeric = blank.Name("numeric").Check(unicode.IsNumber)
-
-var rulemap = map[string]*Rule{
-	"alpha": Alpha,
-	"num":   Numeric,
-}
-
-func FromChar(c rune) *Rule {
-	return blank.
-		Name(fmt.Sprintf("char %s", string(c))).
-		Check(func(r rune) bool { return r == c }).
-		Count(1)
-}
+var RuleNum = RuleAny.Name("num").Check(unicode.IsNumber)
 
 // Rule defines a set of variables to parse a token by
 type Rule struct {
@@ -61,7 +53,7 @@ type Rule struct {
 	capture bool
 }
 
-func NewRule() *Rule { return blank.clone() }
+func NewRule() *Rule { return RuleAny.clone() }
 
 func (a *Rule) clone() *Rule {
 	return &Rule{
@@ -75,7 +67,7 @@ func (a *Rule) clone() *Rule {
 }
 
 func (a *Rule) IsAny() bool {
-	return a == blank
+	return a == RuleAny
 }
 
 func (a *Rule) Count(n int) *Rule {
@@ -105,6 +97,23 @@ func (a *Rule) Check(fn func(rune) bool) *Rule {
 func (a *Rule) Capture(v bool) *Rule {
 	new := a.clone()
 	new.capture = v
+	return new
+}
+
+func (a *Rule) Chars(s string) *Rule {
+	new := a.clone()
+	m := make(map[rune]struct{})
+
+	for _, v := range s {
+		m[rune(v)] = struct{}{}
+	}
+
+	check := func(r rune) bool {
+		_, ok := m[r]
+		return ok
+	}
+
+	new.check = check
 	return new
 }
 

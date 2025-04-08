@@ -1,28 +1,24 @@
 package parse
 
 import (
-	"fmt"
-	"strconv"
-	"strings"
-
 	"github.com/stu-k/go/parser/errors"
 )
 
-type Parser interface {
+type Parsable interface {
 	Parse(string) ([]string, string, error)
 }
 
 type Ruleset struct {
 	name string
-	list []Parser
+	list []Parsable
 }
 
-func NewRuleset(name string, rules ...Parser) *Ruleset {
+func NewRuleset(name string, rules ...Parsable) *Ruleset {
 	return &Ruleset{name, rules}
 }
 
 func (r *Ruleset) Len() int                     { return len(r.list) }
-func (r *Ruleset) Add(rules ...Parser)          { r.list = append(r.list, rules...) }
+func (r *Ruleset) Add(rules ...Parsable)        { r.list = append(r.list, rules...) }
 func (r *Ruleset) Name() string                 { return r.name }
 func (r *Ruleset) UntilFail() *RulesetUntilFail { return &RulesetUntilFail{r} }
 func (r *Ruleset) Parse(s string) ([]string, string, error) {
@@ -77,107 +73,6 @@ func (r *RulesetUntilFail) Parse(s string) ([]string, string, error) {
 	return allResults, toparse, nil
 }
 
-func NewRulesetUntilFail(name string, rules ...Parser) *RulesetUntilFail {
+func NewRulesetUntilFail(name string, rules ...Parsable) *RulesetUntilFail {
 	return &RulesetUntilFail{NewRuleset(name, rules...)}
-}
-
-type rulesetargs struct {
-	rule        *Rule
-	char        rune
-	count       int
-	cap, usecap bool
-}
-
-func NewRulesetFromStr(name, s string) (*Ruleset, error) {
-	errFn := func(arg string, i, j int) error {
-		return fmt.Errorf(
-			"error creating ruleset: invalid arg \"%v\" in segment %d, arg %d",
-			arg, i, j,
-		)
-	}
-
-	rs := NewRuleset(name)
-
-	parts := strings.Split(s, " | ")
-	if len(parts) == 0 {
-		return nil, fmt.Errorf("error creating ruleset: invalid string \"%s\"", s)
-	}
-
-	for i, part := range parts {
-
-		var rsa rulesetargs
-
-		args := strings.Split(part, ", ")
-		for j, arg := range args {
-			if len(arg) == 0 || len(arg) == 1 {
-				return nil, errFn(arg, i, j)
-			}
-
-			r := rune(arg[1])
-			switch rune(arg[0]) {
-
-			case 'r':
-				rul, ok := rulemap[arg[1:]]
-				if !ok || rul == nil {
-					return nil, errFn(arg, i, j)
-				}
-				rsa.rule = rul
-				continue
-
-			case '#':
-				ct, err := strconv.Atoi(arg[1:])
-				if err != nil {
-					return nil, errFn(arg, i, j)
-				}
-				rsa.count = ct
-				continue
-
-			case 'c':
-				rsa.char = r
-				continue
-
-			case 'g':
-				if r == '0' {
-					rsa.cap = false
-					rsa.usecap = true
-					continue
-				}
-				if r == '1' {
-					rsa.cap = true
-					rsa.usecap = true
-					continue
-				}
-				return nil, errFn(arg, i, j)
-
-			default:
-				return nil, errFn(arg, i, j)
-
-			}
-		}
-
-		rule := NewRule()
-		if rsa.rule != nil {
-			rule = rsa.rule
-		}
-		if rsa.count != 0 {
-			rule = rule.Count(rsa.count)
-		}
-		if rsa.char != 0 {
-			rule = rule.Check(func(r rune) bool { return r == rsa.char })
-		}
-		if rsa.usecap {
-			rule = rule.Capture(rsa.cap)
-		}
-		rule = rule.Name(part)
-		if rule.IsAny() {
-			return nil, fmt.Errorf("error creating ruleset: can't add empty rule \"%s\"", part)
-		}
-		rs.Add(rule)
-	}
-
-	if rs.Len() == 0 {
-		return nil, fmt.Errorf("error creating ruleset: can't use empty ruleset")
-	}
-
-	return rs, nil
 }
