@@ -118,7 +118,7 @@ func NewRulesetFromStr(name, s string) (*Ruleset, error) {
 
 			case 'r':
 				rul, ok := rulemap[arg[1:]]
-				if !ok {
+				if !ok || rul == nil {
 					return nil, errFn(arg, i, j)
 				}
 				rsa.rule = rul

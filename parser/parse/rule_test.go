@@ -3,12 +3,13 @@ package parse_test
 import (
 	"errors"
 	"testing"
+	"unicode"
 
 	errs "github.com/stu-k/go/parser/errors"
 	"github.com/stu-k/go/parser/parse"
 )
 
-func TestAlpha(t *testing.T) {
+func TestRule(t *testing.T) {
 	type testobj struct {
 		in   string
 		want string
@@ -63,6 +64,16 @@ func TestAlpha(t *testing.T) {
 		{"abc", "", "", nil},
 		{"a.", "", ".", nil},
 		{"a   .", "", ".", nil},
+
+		{".", "", "", errs.ErrBadMatch},
+	}
+
+	rulemap[parse.Alpha.Check(unicode.IsNumber)] = []testobj{
+		{"1", "1", "", nil},
+		{"12", "12", "", nil},
+		{"123", "123", "", nil},
+		{"1.", "1", ".", nil},
+		{"1   .", ".", ".", nil},
 
 		{".", "", "", errs.ErrBadMatch},
 	}
