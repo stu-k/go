@@ -12,11 +12,10 @@ var defaultRulemap = map[string]*Rule{
 }
 
 var RuleAny = &Rule{
-	name:       "any",
-	count:      -1,
-	check:      func(_ rune) bool { return true },
-	atLeastOne: true,
-	capture:    true,
+	name:    "any",
+	count:   -1,
+	check:   func(_ rune) bool { return true },
+	capture: true,
 }
 
 var RuleAlpha = RuleAny.Named("alpha").Check(unicode.IsLetter)
@@ -38,10 +37,6 @@ type Rule struct {
 	// in a string are valid for the rule
 	check func(rune) bool
 
-	// atLeastOne determines if a token must have
-	// at least one valid character
-	atLeastOne bool
-
 	// capture determines if the match should be returned
 	capture bool
 }
@@ -50,11 +45,10 @@ func NewRule() *Rule { return RuleAny.clone() }
 
 func (a *Rule) clone() *Rule {
 	return &Rule{
-		name:       a.name,
-		count:      a.count,
-		check:      a.check,
-		atLeastOne: a.atLeastOne,
-		capture:    a.capture,
+		name:    a.name,
+		count:   a.count,
+		check:   a.check,
+		capture: a.capture,
 	}
 }
 
@@ -129,7 +123,7 @@ func (a *Rule) Parse(s string) (*ParseResult, error) {
 	// handle checking results on end of string
 	// or invalid character
 	checkEnd := func(ct int) error {
-		if a.atLeastOne && result == "" {
+		if len(result) == 0 {
 			return errors.NewBadMatchErr(a.name, s)
 		}
 
