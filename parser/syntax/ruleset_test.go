@@ -144,7 +144,7 @@ func TestRuleset(t *testing.T) {
 }
 
 func TestRulesetUntilFail(t *testing.T) {
-	mk := func(s string, r ...string) (*stx.RulesetUntilFail, error) {
+	mk := func(s string, r ...string) (stx.Parsable, error) {
 		rfs, err := stx.NewRulesetFromStrs(s, r...)
 		if err != nil {
 			return nil, err
@@ -154,13 +154,13 @@ func TestRulesetUntilFail(t *testing.T) {
 
 	type rulesettest struct {
 		in   string
-		rs   *stx.RulesetUntilFail
+		rs   stx.Parsable
 		want []string
 		rest string
 		err  error
 	}
 
-	rstests := make(map[*stx.RulesetUntilFail][]rulesettest)
+	rstests := make(map[stx.Parsable][]rulesettest)
 
 	rs, err := mk(
 		"alpha 1",

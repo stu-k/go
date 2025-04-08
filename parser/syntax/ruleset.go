@@ -5,7 +5,8 @@ import (
 )
 
 type Parsable interface {
-	Parse(string) (ParseResult, error)
+	Parse(string) (*ParseResult, error)
+	Name() string
 }
 
 type Ruleset struct {
@@ -20,8 +21,8 @@ func NewRuleset(name string, rules ...Parsable) *Ruleset {
 func (r *Ruleset) Len() int                     { return len(r.list) }
 func (r *Ruleset) Add(rules ...Parsable)        { r.list = append(r.list, rules...) }
 func (r *Ruleset) Name() string                 { return r.name }
-func (r *Ruleset) UntilFail() *RulesetUntilFail { return &RulesetUntilFail{r} }
-func (r *Ruleset) Parse(s string) (ParseResult, error) {
+func (r *Ruleset) UntilFail() *rulesetUntilFail { return &rulesetUntilFail{r} }
+func (r *Ruleset) Parse(s string) (*ParseResult, error) {
 	if len(r.list) == 0 || s == "" {
 		return nil, errors.NewBadMatchErr(r.name, s)
 	}
@@ -44,11 +45,11 @@ func (r *Ruleset) Parse(s string) (ParseResult, error) {
 	return results, nil
 }
 
-type RulesetUntilFail struct {
+type rulesetUntilFail struct {
 	*Ruleset
 }
 
-func (r *RulesetUntilFail) Parse(s string) (ParseResult, error) {
+func (r *rulesetUntilFail) Parse(s string) (*ParseResult, error) {
 	all := NewParseResult(r.name, nil, s)
 	for {
 		results, err := r.Ruleset.Parse(all.Rest())

@@ -1,49 +1,45 @@
 package syntax
 
-type ParseResult interface {
-	Name() string
-	Strings() []string
-	Rest() string
+type ParseResult struct {
+	name        string
+	resultsStrs []string
+	rest        string
+	results     []*ParseResult
 }
 
-type parseResult struct {
-	name    string
-	results []string
-	rest    string
-}
-
-func NewParseResult(n string, s []string, r string) *parseResult {
+func NewParseResult(n string, s []string, r string) *ParseResult {
 	if s == nil {
 		s = []string{}
 	}
-	return &parseResult{n, s, r}
+	return &ParseResult{n, s, r, nil}
 }
 
-func (p *parseResult) Name() string {
+func (p *ParseResult) Name() string {
 	return p.name
 }
 
-func (p *parseResult) Strings() []string {
-	return p.results
+func (p *ParseResult) Strings() []string {
+	return p.resultsStrs
 }
 
-func (p *parseResult) Rest() string {
+func (p *ParseResult) Rest() string {
 	return p.rest
 }
 
-func (p *parseResult) Append(r ParseResult) {
+func (p *ParseResult) Append(r *ParseResult) {
 	if r == nil {
 		return
 	}
-	p.results = append(p.results, r.Strings()...)
+	p.results = append(p.results, r)
+	p.resultsStrs = append(p.resultsStrs, r.Strings()...)
 }
 
-func (p *parseResult) SetRest(r string) {
+func (p *ParseResult) SetRest(r string) {
 	p.rest = r
 }
 
-func (p *parseResult) Len() int {
-	if p.results == nil {
+func (p *ParseResult) Len() int {
+	if p.resultsStrs == nil {
 		return 0
 	}
 	return len(p.Strings())

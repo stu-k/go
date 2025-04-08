@@ -96,7 +96,7 @@ func newRulesetFromStrs(name string, pmap map[string]*Rule, parts ...string) (*R
 		if rsa.usecap {
 			rule = rule.Capture(rsa.cap)
 		}
-		rule = rule.Name(part)
+		rule = rule.Named(part)
 		if rule.IsAny() {
 			return nil, fmt.Errorf("error creating ruleset: can't add empty rule \"%s\"", part)
 		}

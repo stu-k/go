@@ -19,9 +19,9 @@ var RuleAny = &Rule{
 	capture:    true,
 }
 
-var RuleAlpha = RuleAny.Name("alpha").Check(unicode.IsLetter)
+var RuleAlpha = RuleAny.Named("alpha").Check(unicode.IsLetter)
 
-var RuleNum = RuleAny.Name("num").Check(unicode.IsNumber)
+var RuleNum = RuleAny.Named("num").Check(unicode.IsNumber)
 
 // Rule defines a set of variables to parse a token by
 type Rule struct {
@@ -68,10 +68,14 @@ func (a *Rule) Count(n int) *Rule {
 	return new
 }
 
-func (a *Rule) Name(s string) *Rule {
+func (a *Rule) Named(s string) *Rule {
 	new := a.clone()
 	new.name = s
 	return new
+}
+
+func (a *Rule) Name() string {
+	return a.name
 }
 
 func (a *Rule) Check(fn func(rune) bool) *Rule {
@@ -103,7 +107,7 @@ func (a *Rule) Chars(s string) *Rule {
 	return new
 }
 
-func (a *Rule) Parse(s string) (ParseResult, error) {
+func (a *Rule) Parse(s string) (*ParseResult, error) {
 	useCount := a.count >= 0
 	if s == "" {
 		return nil, errors.NewBadMatchErr(a.name, s)
