@@ -30,19 +30,6 @@ var eq = func(a, b []string) bool {
 }
 
 func TestRuleset(t *testing.T) {
-	ss := func(s ...string) []string { return s }
-	eq := func(a, b []string) bool {
-		if len(a) != len(b) {
-			return false
-		}
-		for i, v := range a {
-			if b[i] != v {
-				return false
-			}
-		}
-		return true
-	}
-
 	type rulesettest struct {
 		in   string
 		rs   *parse.Ruleset
@@ -149,19 +136,6 @@ func TestRuleset(t *testing.T) {
 }
 
 func TestRulesetFromString(t *testing.T) {
-	ss := func(s ...string) []string { return s }
-	eq := func(a, b []string) bool {
-		if len(a) != len(b) {
-			return false
-		}
-		for i, v := range a {
-			if b[i] != v {
-				return false
-			}
-		}
-		return true
-	}
-
 	type rulesettest struct {
 		in   string
 		rs   *parse.Ruleset
@@ -352,18 +326,6 @@ func TestRulesetFromString(t *testing.T) {
 }
 
 func TestRulesetUntilFail(t *testing.T) {
-	ss := func(s ...string) []string { return s }
-	eq := func(a, b []string) bool {
-		if len(a) != len(b) {
-			return false
-		}
-		for i, v := range a {
-			if b[i] != v {
-				return false
-			}
-		}
-		return true
-	}
 	mk := func(s, r string) (*parse.RulesetUntilFail, error) {
 		rfs, err := parse.NewRulesetFromStr(s, r)
 		if err != nil {
