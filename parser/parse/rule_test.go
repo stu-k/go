@@ -68,6 +68,16 @@ func TestAlpha(t *testing.T) {
 		{"_a.bc", "", "", errs.ErrBadMatch},
 	}
 
+	rulemap[parse.Alpha.Capture(false)] = []testobj{
+		{"a", "", "", nil},
+		{"ab", "", "", nil},
+		{"abc", "", "", nil},
+		{"a.", "", ".", nil},
+		{"a   .", "", ".", nil},
+
+		{".", "", "", errs.ErrBadMatch},
+	}
+
 	for rule, tests := range rulemap {
 		for _, test := range tests {
 			got, rest, err := rule.Parse(test.in)

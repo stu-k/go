@@ -82,9 +82,11 @@ func NewRulesetUntilFail(name string, rules ...Parser) *RulesetUntilFail {
 }
 
 type rulesetargs struct {
-	rule          *Rule
-	char, w, s, e rune
-	ct            int
+	rule             *Rule
+	char             rune
+	wrap, start, end rune
+	count            int
+	cap, usecap      bool
 }
 
 func NewRulesetFromStr(name, s string) (*Ruleset, error) {
@@ -128,24 +130,37 @@ func NewRulesetFromStr(name, s string) (*Ruleset, error) {
 				if err != nil {
 					return nil, errFn(arg, i, j)
 				}
-				rsa.ct = ct
+				rsa.count = ct
 				continue
 
 			case 's':
-				rsa.s = r
+				rsa.start = r
 				continue
 
 			case 'e':
-				rsa.e = r
+				rsa.end = r
 				continue
 
 			case 'w':
-				rsa.w = r
+				rsa.wrap = r
 				continue
 
 			case 'c':
 				rsa.char = r
 				continue
+
+			case 'g':
+				if r == '0' {
+					rsa.cap = false
+					rsa.usecap = true
+					continue
+				}
+				if r == '1' {
+					rsa.cap = true
+					rsa.usecap = true
+					continue
+				}
+				return nil, errFn(arg, i, j)
 
 			default:
 				return nil, errFn(arg, i, j)
@@ -157,20 +172,23 @@ func NewRulesetFromStr(name, s string) (*Ruleset, error) {
 		if rsa.rule != nil {
 			rule = rsa.rule
 		}
-		if rsa.s != 0 {
-			rule = rule.Start(rsa.s)
+		if rsa.start != 0 {
+			rule = rule.Start(rsa.start)
 		}
-		if rsa.e != 0 {
-			rule = rule.End(rsa.e)
+		if rsa.end != 0 {
+			rule = rule.End(rsa.end)
 		}
-		if rsa.w != 0 {
-			rule = rule.Wrap(rsa.w)
+		if rsa.wrap != 0 {
+			rule = rule.Wrap(rsa.wrap)
 		}
-		if rsa.ct != 0 {
-			rule = rule.Count(rsa.ct)
+		if rsa.count != 0 {
+			rule = rule.Count(rsa.count)
 		}
 		if rsa.char != 0 {
 			rule = rule.Check(func(r rune) bool { return r == rsa.char })
+		}
+		if rsa.usecap {
+			rule = rule.Capture(rsa.cap)
 		}
 		rule = rule.Name(part)
 		if rule.IsAny() {

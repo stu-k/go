@@ -15,6 +15,7 @@ var blank = &Rule{
 	check:       func(_ rune) bool { return true },
 	ignoreSpace: true,
 	atLeastOne:  true,
+	capture:     true,
 }
 
 var Alpha = blank.Name("alpha").Check(unicode.IsLetter)
@@ -61,6 +62,9 @@ type Rule struct {
 	// atLeastOne determines if a token must have
 	// at least one valid character
 	atLeastOne bool
+
+	// capture determines if the match should be returned
+	capture bool
 }
 
 func NewRule() *Rule { return blank.clone() }
@@ -74,6 +78,7 @@ func (a *Rule) clone() *Rule {
 		check:       a.check,
 		ignoreSpace: a.ignoreSpace,
 		atLeastOne:  a.atLeastOne,
+		capture:     a.capture,
 	}
 }
 
@@ -115,6 +120,12 @@ func (a *Rule) Name(s string) *Rule {
 func (a *Rule) Check(fn func(rune) bool) *Rule {
 	new := a.clone()
 	new.check = fn
+	return new
+}
+
+func (a *Rule) Capture(v bool) *Rule {
+	new := a.clone()
+	new.capture = v
 	return new
 }
 
@@ -179,14 +190,20 @@ func (a *Rule) Parse(s string) ([]string, string, error) {
 
 		if useCount && !useEnd {
 			if countToUse >= a.count {
-				return []string{result}, s[i:], nil
+				if a.capture {
+					return []string{result}, s[i:], nil
+				}
+				return []string{}, s[i:], nil
 			}
 		}
 
 		if !useCount && useEnd {
 			if r == a.end {
 				result += string(r)
-				return []string{result}, s[i+2:], nil
+				if a.capture {
+					return []string{result}, s[i+2:], nil
+				}
+				return []string{}, s[i+2:], nil
 			}
 		}
 
@@ -194,7 +211,10 @@ func (a *Rule) Parse(s string) ([]string, string, error) {
 			if countToUse == a.count+1 {
 				if r == a.end {
 					result += string(r)
-					return []string{result}, s[i+1:], nil
+					if a.capture {
+						return []string{result}, s[i+1:], nil
+					}
+					return []string{}, s[i+1:], nil
 				}
 				return nil, "", errors.NewBadMatchErr(a.name, s)
 			}
@@ -207,7 +227,10 @@ func (a *Rule) Parse(s string) ([]string, string, error) {
 				return nil, "", err
 			}
 
-			return []string{result}, s[i:], nil
+			if a.capture {
+				return []string{result}, s[i:], nil
+			}
+			return []string{}, s[i:], nil
 		}
 
 		result += string(r)
@@ -219,5 +242,8 @@ func (a *Rule) Parse(s string) ([]string, string, error) {
 		return nil, "", err
 	}
 
-	return []string{result}, s[count:], nil
+	if a.capture {
+		return []string{result}, s[count:], nil
+	}
+	return []string{}, s[count:], nil
 }
