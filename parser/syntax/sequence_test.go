@@ -106,10 +106,6 @@ func TestSequence(t *testing.T) {
 					return
 				}
 
-				if got == nil {
-					t.Fatalf("for \"%v\" expected output not to be nil", test.in)
-				}
-
 				if !eq(got.Strings(), test.want) {
 					t.Errorf("for \"%v\" expected output \"%v\"; got \"%v\"", test.in, test.want, got)
 				}
@@ -201,10 +197,6 @@ func TestSeqUntilFail(t *testing.T) {
 
 				if err != nil {
 					return
-				}
-
-				if got == nil {
-					t.Fatalf("for \"%v\" expected output not to be nil", test.in)
 				}
 
 				if !eq(got.Strings(), test.want) {
@@ -320,10 +312,6 @@ func TestSeqOneOf(t *testing.T) {
 
 				if err != nil {
 					return
-				}
-
-				if got == nil {
-					t.Fatalf("for \"%v\" expected output not to be nil", test.in)
 				}
 
 				for _, v := range test.want {

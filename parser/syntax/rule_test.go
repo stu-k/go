@@ -126,10 +126,6 @@ func TestRule(t *testing.T) {
 				return
 			}
 
-			if got == nil {
-				t.Fatalf("for \"%s\" expected output not to be nil", test.in)
-			}
-
 			if !eq(got.Strings(), ss(test.want)) {
 				t.Errorf("for \"%s\" expected output \"%v\"; got \"%v\"", test.in, test.want, got)
 			}
