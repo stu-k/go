@@ -119,23 +119,22 @@ func TestSequence(t *testing.T) {
 }
 
 func TestSeqUntilFail(t *testing.T) {
-	mk := func(s string, r ...string) (stx.Parsable, error) {
+	mk := func(s string, r ...string) (*stx.Sequence, error) {
 		rfs, err := stx.NewSequenceFromStrs(s, r...)
 		if err != nil {
 			return nil, err
 		}
-		return rfs.UntilFail(), nil
+		return rfs, nil
 	}
 
 	type seqTest struct {
 		in   string
-		rs   stx.Parsable
 		want []string
 		rest string
 		err  error
 	}
 
-	sqtests := make(map[stx.Parsable][]seqTest)
+	sqtests := make(map[*stx.Sequence][]seqTest)
 
 	sq, err := mk(
 		"alpha 1",
@@ -145,14 +144,14 @@ func TestSeqUntilFail(t *testing.T) {
 		t.Fatalf("ruleset creation failed: %v", err)
 	}
 	sqtests[sq] = []seqTest{
-		{"a", sq, ss("a"), "", nil},
-		{"ab", sq, ss("a", "b"), "", nil},
-		{"abc", sq, ss("a", "b", "c"), "", nil},
+		{"a", ss("a"), "", nil},
+		{"ab", ss("a", "b"), "", nil},
+		{"abc", ss("a", "b", "c"), "", nil},
 
-		{"a.", sq, ss("a"), ".", nil},
-		{"ab.", sq, ss("a", "b"), ".", nil},
+		{"a.", ss("a"), ".", nil},
+		{"ab.", ss("a", "b"), ".", nil},
 
-		{".", sq, ss(), "", errs.ErrBadMatch},
+		{".", ss(), "", errs.ErrBadMatch},
 	}
 
 	sq, err = mk(
@@ -163,12 +162,12 @@ func TestSeqUntilFail(t *testing.T) {
 		t.Fatalf("ruleset creation failed: %v", err)
 	}
 	sqtests[sq] = []seqTest{
-		{"a,", sq, ss("a", ","), "", nil},
-		{"a,b,", sq, ss("a", ",", "b", ","), "", nil},
-		{"a,b", sq, ss("a", ","), "b", nil},
-		{"a,", sq, ss("a", ","), "", nil},
+		{"a,", ss("a", ","), "", nil},
+		{"a,b,", ss("a", ",", "b", ","), "", nil},
+		{"a,b", ss("a", ","), "b", nil},
+		{"a,", ss("a", ","), "", nil},
 
-		{".", sq, ss(), "", errs.ErrBadMatch},
+		{".", ss(), "", errs.ErrBadMatch},
 	}
 
 	sq, err = mk(
@@ -179,18 +178,18 @@ func TestSeqUntilFail(t *testing.T) {
 		t.Fatalf("ruleset creation failed: %v", err)
 	}
 	sqtests[sq] = []seqTest{
-		{"abc:123", sq, ss("abc", ":", "123"), "", nil},
-		{"a:1b:2", sq, ss("a", ":", "1", "b", ":", "2"), "", nil},
-		{"a:1", sq, ss("a", ":", "1"), "", nil},
-		{"a:1b:", sq, ss("a", ":", "1"), "b:", nil},
+		{"abc:123", ss("abc", ":", "123"), "", nil},
+		{"a:1b:2", ss("a", ":", "1", "b", ":", "2"), "", nil},
+		{"a:1", ss("a", ":", "1"), "", nil},
+		{"a:1b:", ss("a", ":", "1"), "b:", nil},
 
-		{".", sq, ss(), "", errs.ErrBadMatch},
+		{".", ss(), "", errs.ErrBadMatch},
 	}
 
 	for rs, tests := range sqtests {
 		t.Run(rs.Name(), func(t *testing.T) {
 			for _, test := range tests {
-				got, err := test.rs.Parse(test.in)
+				got, err := rs.UntilFail(test.in)
 				if !errors.Is(err, test.err) {
 					t.Fatalf("for \"%v\" expected error \"%v\"; got \"%v\"", test.in, test.err, err)
 				}
@@ -211,13 +210,13 @@ func TestSeqUntilFail(t *testing.T) {
 	}
 }
 
-func TestSeqOneOf(t *testing.T) {
+func TestSeqAnyOf(t *testing.T) {
 	mk := func(s string, r ...string) (stx.Parsable, error) {
 		sfs, err := stx.NewSequenceFromStrs(s, r...)
 		if err != nil {
 			return nil, err
 		}
-		return sfs.OneOf(), nil
+		return sfs, nil
 	}
 
 	type sqTest struct {
@@ -226,7 +225,7 @@ func TestSeqOneOf(t *testing.T) {
 		err  error
 	}
 
-	sqTests := make(map[stx.Parsable][]sqTest)
+	sqTests := make(map[*stx.Sequence][]sqTest)
 
 	sq1, err := mk(
 		"alp",
@@ -260,21 +259,21 @@ func TestSeqOneOf(t *testing.T) {
 		t.Fatalf("ruleset creation failed: %v", err)
 	}
 
-	sq := stx.NewSequence("a0.", sq1, sq2, sq3, sq4).OneOf()
+	sq := stx.NewSequence("a0.", sq1, sq2, sq3, sq4)
 	sqTests[sq] = []sqTest{
 		{"a", ss("alp", "1a"), nil},
 		{"aa", ss("alp", "1a", "2alp"), nil},
 		{"aaa", ss("alp", "1a", "2alp"), nil},
 
-		{"b", ss("alp"), nil},
+		{"b", ss("alp"), nil}, // passes
 		{"bb", ss("alp", "2b", "2alp"), nil},
 		{"bbb", ss("alp", "2b", "2alp"), nil},
 
-		{"x", ss("alp"), nil},
+		{"x", ss("alp"), nil}, // passes
 		{"xy", ss("alp", "2alp"), nil},
 
-		{"", ss(), errs.ErrBadMatch},
-		{".", ss(), errs.ErrBadMatch},
+		{"", ss(), errs.ErrBadMatch},  // passes
+		{".", ss(), errs.ErrBadMatch}, // passes
 	}
 
 	sq1, err = mk(
@@ -293,7 +292,7 @@ func TestSeqOneOf(t *testing.T) {
 		t.Fatalf("ruleset creation failed: %v", err)
 	}
 
-	sq = stx.NewSequence("str / var", sq1, sq2).OneOf()
+	sq = stx.NewSequence("str / var", sq1, sq2)
 	sqTests[sq] = []sqTest{
 		{"'str'", ss("str"), nil},
 		{"var", ss("var"), nil},
@@ -305,7 +304,7 @@ func TestSeqOneOf(t *testing.T) {
 	for sq, tests := range sqTests {
 		t.Run(sq.Name(), func(t *testing.T) {
 			for _, test := range tests {
-				got, err := sq.Parse(test.in)
+				got, err := sq.AnyOf(test.in)
 				if !errors.Is(err, test.err) {
 					t.Fatalf("for \"%v\" expected error \"%v\"; got \"%v\"", test.in, test.err, err)
 				}
@@ -317,7 +316,7 @@ func TestSeqOneOf(t *testing.T) {
 				for _, v := range test.want {
 					_, ok := got.NameMap()[v]
 					if !ok {
-						t.Fatalf("expected key \"%v\" in nameMap %v", v, got.NameMap())
+						t.Errorf("for \"%v\" expected key \"%v\" in nameMap %v", test.in, v, got.NameMap())
 					}
 				}
 			}

@@ -13,20 +13,22 @@ type Parsable interface {
 	Name() string
 }
 
+type ParseFn func(string) (*ParseResult, error)
+
 type Sequence struct {
-	name string
-	list []Parsable
+	name    string
+	list    []Parsable
+	capture bool
 }
 
 func NewSequence(name string, rules ...Parsable) *Sequence {
-	return &Sequence{name, rules}
+	return &Sequence{name, rules, true}
 }
 
-func (r *Sequence) Len() int                 { return len(r.list) }
-func (r *Sequence) Add(rules ...Parsable)    { r.list = append(r.list, rules...) }
-func (r *Sequence) Name() string             { return r.name }
-func (r *Sequence) UntilFail() *seqUntilFail { return &seqUntilFail{r} }
-func (r *Sequence) OneOf() *seqOneOf         { return &seqOneOf{r} }
+func (r *Sequence) Len() int          { return len(r.list) }
+func (r *Sequence) Add(v ...Parsable) { r.list = append(r.list, v...) }
+func (r *Sequence) Name() string      { return r.name }
+func (r *Sequence) SetCapture(v bool) { r.capture = v }
 func (r *Sequence) Parse(s string) (*ParseResult, error) {
 	results := NewParseResult(r.name, nil, s)
 	for _, rule := range r.list {
@@ -35,27 +37,29 @@ func (r *Sequence) Parse(s string) (*ParseResult, error) {
 			return returnPr(r.name, s, err)
 		}
 
-		results.Append(result)
+		if r.capture {
+			results.Append(result)
+		}
 		results.SetRest(result.Rest())
 	}
 	return results, nil
 }
 
-type seqUntilFail struct {
-	*Sequence
-}
-
-func (r *seqUntilFail) Parse(s string) (*ParseResult, error) {
+func (r *Sequence) UntilFail(s string) (*ParseResult, error) {
 	all := NewParseResult(r.name, nil, s)
 	for {
-		results, err := r.Sequence.Parse(all.Rest())
+		results, err := r.Parse(all.Rest())
 		if err != nil {
 			if all.Len() == 0 {
 				return returnPr(r.name, s, err)
 			}
 			return all, nil
 		}
-		all.Append(results)
+
+		if r.capture {
+			all.Append(results)
+		}
+
 		all.SetRest(results.Rest())
 		if len(results.Rest()) == 0 {
 			break
@@ -64,25 +68,21 @@ func (r *seqUntilFail) Parse(s string) (*ParseResult, error) {
 	return all, nil
 }
 
-type seqOneOf struct {
-	*Sequence
-}
-
-func (r *seqOneOf) Parse(s string) (*ParseResult, error) {
+func (r *Sequence) AnyOf(s string) (*ParseResult, error) {
 	all := NewParseResult(r.name, nil, s)
-	for _, p := range r.Sequence.list {
-		results, err := p.Parse(all.Rest())
+	for _, p := range r.list {
+		results, err := p.Parse(s)
 		if err != nil {
 			continue
 		}
-		all.Append(results)
-		if len(results.Rest()) == 0 {
-			break
+
+		if r.capture {
+			all.Append(results)
 		}
 	}
 
 	if all.Len() == 0 {
-		return returnPr(r.name, s, errors.NewBadMatchErr(r.Sequence.name, s))
+		return returnPr(r.name, s, errors.NewBadMatchErr(r.name, s))
 	}
 
 	return all, nil
@@ -111,12 +111,11 @@ func newSequenceFromStrs(name string, pmap map[string]*Rule, parts ...string) (*
 		)
 	}
 
-	sq := NewSequence(name)
-
 	if len(parts) == 0 {
 		return nil, fmt.Errorf("error creating sequence from strs: invalid string \"%s\"", parts)
 	}
 
+	sq := NewSequence(name)
 	for i, part := range parts {
 
 		var sqa seqStrArgs
@@ -172,6 +171,8 @@ func newSequenceFromStrs(name string, pmap map[string]*Rule, parts ...string) (*
 		rule := NewRule()
 		if sqa.rule != nil {
 			rule = sqa.rule
+		} else {
+			rule = rule.Named(part)
 		}
 		if sqa.count != 0 {
 			rule = rule.Count(sqa.count)
@@ -182,7 +183,6 @@ func newSequenceFromStrs(name string, pmap map[string]*Rule, parts ...string) (*
 		if sqa.usecap {
 			rule = rule.Capture(sqa.cap)
 		}
-		rule = rule.Named(part)
 		if rule.IsAny() {
 			return nil, fmt.Errorf("error creating sequence from strs: can't add empty rule \"%s\"", part)
 		}
