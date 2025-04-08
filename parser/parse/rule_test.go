@@ -30,6 +30,17 @@ func TestRule(t *testing.T) {
 		{"", "", "", errs.ErrBadMatch},
 	}
 
+	rulemap[parse.RuleNum] = []testobj{
+		{"123", "123", "", nil},
+		{"123.", "123", ".", nil},
+		{"12.3", "12", ".3", nil},
+		{"1.23", "1", ".23", nil},
+		{".123", "", "", errs.ErrBadMatch},
+
+		{".", "", "", errs.ErrBadMatch},
+		{"", "", "", errs.ErrBadMatch},
+	}
+
 	rulemap[parse.RuleAlpha.Count(3)] = []testobj{
 		{"abc", "abc", "", nil},
 		{"abcd", "abc", "d", nil},
@@ -53,12 +64,30 @@ func TestRule(t *testing.T) {
 		{"", "", "", errs.ErrBadMatch},
 	}
 
-	rulemap[parse.RuleAlpha.Check(unicode.IsNumber)] = []testobj{
+	rulemap[parse.RuleAny.Check(unicode.IsNumber)] = []testobj{
 		{"1", "1", "", nil},
 		{"12", "12", "", nil},
 		{"123", "123", "", nil},
 		{"1.", "1", ".", nil},
 		{".1", "", "", errs.ErrBadMatch},
+
+		{".", "", "", errs.ErrBadMatch},
+		{"", "", "", errs.ErrBadMatch},
+	}
+
+	rulemap[parse.RuleAny.Chars("a1")] = []testobj{
+		{"a", "a", "", nil},
+		{"aa", "aa", "", nil},
+		{"1", "1", "", nil},
+		{"11", "11", "", nil},
+		{"a1", "a1", "", nil},
+		{"aa1", "aa1", "", nil},
+		{"aa11", "aa11", "", nil},
+		{"a1a1", "a1a1", "", nil},
+		{"1a1a", "1a1a", "", nil},
+
+		{"a1b2", "a1", "b2", nil},
+		{".a1", "", "", errs.ErrBadMatch},
 
 		{".", "", "", errs.ErrBadMatch},
 		{"", "", "", errs.ErrBadMatch},
