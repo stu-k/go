@@ -1,6 +1,8 @@
 package syntax
 
 import (
+	"fmt"
+	"strings"
 	"unicode"
 
 	"github.com/stu-k/go/parser/errors"
@@ -12,10 +14,11 @@ var defaultRulemap = map[string]*Rule{
 }
 
 var RuleAny = &Rule{
-	name:    "any",
-	repeat:  -1,
-	check:   func(_ string) bool { return true },
-	capture: true,
+	name:      "any",
+	repeat:    -1,
+	capture:   true,
+	checkChar: func(_ string) bool { return true },
+	checkStr:  "",
 }
 
 var RuleAlpha = RuleAny.Named("alpha").CheckChar(unicode.IsLetter)
@@ -34,23 +37,28 @@ type Rule struct {
 	//     repeat(3) for ab -> error
 	repeat int
 
-	// check is the fn used to validate if the characters
-	// in a string are valid for the rule
-	check func(string) bool
-
 	// capture determines if the match should be returned
 	capture bool
+
+	// checkChar is the fn used to validate if the characters
+	// in a string are valid for the rule
+	checkChar func(string) bool
+
+	// checkStr is the exact string for a rule to parse against
+	checkStr string
 }
 
 func NewRule() *Rule { return RuleAny.clone() }
 
 func (a *Rule) clone() *Rule {
-	return &Rule{
-		name:    a.name,
-		repeat:  a.repeat,
-		check:   a.check,
-		capture: a.capture,
+	new := &Rule{
+		name:     a.name,
+		repeat:   a.repeat,
+		capture:  a.capture,
+		checkStr: a.checkStr,
 	}
+	new.checkChar = a.checkChar
+	return new
 }
 
 func (a *Rule) IsAny() bool {
@@ -69,9 +77,17 @@ func (a *Rule) Name() string {
 
 func (a *Rule) CheckChar(fn func(rune) bool) *Rule {
 	new := a.clone()
-	new.check = func(s string) bool {
+	new.checkChar = func(s string) bool {
 		return len(s) > 0 && fn(rune(s[0]))
 	}
+	new.checkStr = ""
+	return new
+}
+
+func (a *Rule) CheckStr(s string) *Rule {
+	new := a.clone()
+	new.checkStr = s
+	new.checkChar = nil
 	return new
 }
 
@@ -94,7 +110,7 @@ func (a *Rule) Chars(s string) *Rule {
 		return ok
 	}
 
-	new.check = check
+	new.checkChar = check
 	return new
 }
 
@@ -104,20 +120,74 @@ func (a *Rule) ToSeq() *Sequence {
 }
 
 func (a *Rule) Repeat(n int) *Rule {
-	r := a.clone()
-	r.repeat = n
-	return r
+	new := a.clone()
+	new.repeat = n
+	return new
 }
 
 func (a *Rule) Parse(s string) (*ParseResult, error) {
+	if a.checkChar == nil && len(a.checkStr) == 0 {
+		// defaulting to "none" rule to invalidate null pointers
+		fmt.Println("[ERR] DEFAULTED_NONE_RULE")
+		return a.clone().
+			Named("DEFAULTED_NONE_RULE").
+			CheckChar(func(_ rune) bool { return false }).
+			Parse(s)
+	}
+
+	if len(a.checkStr) > 0 {
+		if a.repeat > -1 {
+			return a.parseStrRepeat(a.checkStr, s, a.repeat)
+		}
+		return a.parseStr(a.checkStr, s)
+	}
+
 	return a.parseChar(s)
 }
 
+func (a *Rule) parseStr(match, s string) (*ParseResult, error) {
+	if len(s) == 0 || len(match) == 0 {
+		return retErr(a.name, errors.NewBadMatchErr(a.name, s))
+	}
+
+	if !strings.HasPrefix(s, match) {
+		return retErr(a.name, errors.NewBadMatchErr(a.name, s))
+	}
+
+	return NewParseResult(a.name, []string{match}, s[len(match):]), nil
+}
+
+func (a *Rule) parseStrRepeat(match, s string, n int) (*ParseResult, error) {
+	if len(s) == 0 || len(match) == 0 {
+		return retErr(a.name, errors.NewBadMatchErr(a.name, s))
+	}
+
+	var count int
+	results := NewParseResult(a.name, nil, s)
+	for i := 0; i < n; i++ {
+		result, err := a.parseStr(match, results.Rest())
+		if err != nil {
+			if results.Len() == 0 {
+				return retErr(a.name, errors.NewBadMatchErr(a.name, s))
+			}
+			break
+		}
+		results.Append(result)
+		results.SetRest(result.Rest())
+		count++
+	}
+
+	if results.Len() == 0 || count < n {
+		return retErr(a.name, errors.NewBadMatchErr(a.name, s))
+	}
+
+	return results, nil
+}
+
 func (a *Rule) parseChar(s string) (*ParseResult, error) {
-	name, _ := a.name, a.repeat
 	shouldRepeat := a.repeat >= 0
 	if len(s) == 0 {
-		return returnPr(name, s, errors.NewBadMatchErr(name, s))
+		return retErr(a.name, errors.NewBadMatchErr(a.name, s))
 	}
 
 	var result string
@@ -133,11 +203,11 @@ func (a *Rule) parseChar(s string) (*ParseResult, error) {
 	// or invalid character
 	checkEnd := func(ct int) error {
 		if len(result) == 0 {
-			return errors.NewBadMatchErr(name, s)
+			return errors.NewBadMatchErr(a.name, s)
 		}
 
 		if shouldRepeat && ct < a.repeat {
-			return errors.NewBadMatchErr(name, s)
+			return errors.NewBadMatchErr(a.name, s)
 		}
 
 		return nil
@@ -151,23 +221,23 @@ func (a *Rule) parseChar(s string) (*ParseResult, error) {
 		if shouldRepeat {
 			if countToUse >= a.repeat {
 				if a.capture {
-					return NewParseResult(name, []string{result}, s[i:]), nil
+					return NewParseResult(a.name, []string{result}, s[i:]), nil
 				}
-				return NewParseResult(name, nil, s[i:]), nil
+				return NewParseResult(a.name, nil, s[i:]), nil
 			}
 		}
 
-		ok := a.check(string(r))
+		ok := a.checkChar(string(r))
 		if !ok {
 			err := checkEnd(countToUse)
 			if err != nil {
-				return returnPr(name, s, err)
+				return retErr(a.name, err)
 			}
 
 			if a.capture {
-				return NewParseResult(name, []string{result}, s[i:]), nil
+				return NewParseResult(a.name, []string{result}, s[i:]), nil
 			}
-			return NewParseResult(name, nil, s[i:]), nil
+			return NewParseResult(a.name, nil, s[i:]), nil
 		}
 
 		result += string(r)
@@ -176,11 +246,11 @@ func (a *Rule) parseChar(s string) (*ParseResult, error) {
 
 	err := checkEnd(count)
 	if err != nil {
-		return returnPr(name, s, err)
+		return retErr(a.name, err)
 	}
 
 	if a.capture {
-		return NewParseResult(name, []string{result}, s[count:]), nil
+		return NewParseResult(a.name, []string{result}, s[count:]), nil
 	}
-	return NewParseResult(name, nil, s[count:]), nil
+	return NewParseResult(a.name, nil, s[count:]), nil
 }

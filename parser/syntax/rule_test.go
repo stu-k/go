@@ -31,7 +31,7 @@ var eq = func(a, b []string) bool {
 	return true
 }
 
-func TestRule(t *testing.T) {
+func TestRuleChar(t *testing.T) {
 	type testobj struct {
 		in   string
 		want string
@@ -122,10 +122,6 @@ func TestRule(t *testing.T) {
 				t.Fatalf("for \"%s\" expected error \"%v\"; got \"%v\"", test.in, test.err, err)
 			}
 
-			if err != nil {
-				return
-			}
-
 			if !eq(got.Strings(), ss(test.want)) {
 				t.Errorf("for \"%s\" expected output \"%v\"; got \"%v\"", test.in, test.want, got)
 			}
@@ -134,5 +130,62 @@ func TestRule(t *testing.T) {
 				t.Errorf("for \"%s\" expected remainder \"%v\"; got \"%v\"", test.in, test.rest, got.Rest())
 			}
 		}
+	}
+}
+
+func TestRuleStr(t *testing.T) {
+	type testobj struct {
+		in   string
+		want []string
+		rest string
+		err  error
+	}
+
+	rulemap := make(map[*stx.Rule][]testobj)
+
+	rulemap[stx.RuleAlpha.CheckStr("a").Named("check a")] = []testobj{
+		{"a", ss("a"), "", nil},
+		{"aa", ss("a"), "a", nil},
+		{"abc", ss("a"), "bc", nil},
+		{".", ss(), "", errs.ErrBadMatch},
+		{"", ss(), "", errs.ErrBadMatch},
+	}
+
+	rulemap[stx.RuleAlpha.CheckStr("a").Repeat(3).Named("check a 3")] = []testobj{
+		{"aaa", ss("a", "a", "a"), "", nil},
+		{"aaaa", ss("a", "a", "a"), "a", nil},
+		{"a", ss(), "", errs.ErrBadMatch},
+		{"aa", ss(), "", errs.ErrBadMatch},
+		{"abc", ss(), "", errs.ErrBadMatch},
+		{".", ss(), "", errs.ErrBadMatch},
+		{"", ss(), "", errs.ErrBadMatch},
+	}
+
+	rulemap[stx.RuleAlpha.CheckStr("ab").Repeat(2).Named("check ab 2")] = []testobj{
+		{"abab", ss("ab", "ab"), "", nil},
+		{"ababc", ss("ab", "ab"), "c", nil},
+		{"ab", ss(), "", errs.ErrBadMatch},
+		{"aba", ss(), "", errs.ErrBadMatch},
+		{".", ss(), "", errs.ErrBadMatch},
+		{"", ss(), "", errs.ErrBadMatch},
+	}
+
+	for rule, tests := range rulemap {
+		t.Run(rule.Name(), func(t *testing.T) {
+			for _, test := range tests {
+				got, err := rule.Parse(test.in)
+				if !errors.Is(err, test.err) {
+					t.Fatalf("for \"%s\" expected error \"%v\"; got \"%v\"", test.in, test.err, err)
+				}
+
+				if !eq(got.Strings(), test.want) {
+					t.Errorf("for \"%s\" expected output \"%v\"; got \"%v\"", test.in, test.want, got.Strings())
+				}
+
+				if got.Rest() != test.rest {
+					t.Errorf("for \"%s\" expected remainder \"%v\"; got \"%v\"", test.in, test.rest, got.Rest())
+				}
+			}
+		})
 	}
 }

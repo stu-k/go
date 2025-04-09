@@ -34,7 +34,7 @@ func (r *Sequence) Parse(s string) (*ParseResult, error) {
 	for _, rule := range r.list {
 		result, err := rule.Parse(results.Rest())
 		if err != nil {
-			return returnPr(r.name, s, err)
+			return retErr(r.name, err)
 		}
 
 		if r.capture {
@@ -51,7 +51,7 @@ func (r *Sequence) UntilFail(s string) (*ParseResult, error) {
 		results, err := r.Parse(all.Rest())
 		if err != nil {
 			if all.Len() == 0 {
-				return returnPr(r.name, s, err)
+				return retErr(r.name, err)
 			}
 			return all, nil
 		}
@@ -82,14 +82,14 @@ func (r *Sequence) AnyOf(s string) (*ParseResult, error) {
 	}
 
 	if all.Len() == 0 {
-		return returnPr(r.name, s, errors.NewBadMatchErr(r.name, s))
+		return retErr(r.name, errors.NewBadMatchErr(r.name, s))
 	}
 
 	return all, nil
 }
 
-func returnPr(n, s string, err error) (*ParseResult, error) {
-	return NewParseResult(n, nil, s), err
+func retErr(n string, err error) (*ParseResult, error) {
+	return NewParseResult(n, nil, ""), err
 }
 
 type seqStrArgs struct {
