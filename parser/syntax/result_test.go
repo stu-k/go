@@ -38,3 +38,19 @@ func TestResult(t *testing.T) {
 		t.Fatalf("expected okMap for key \"%v\" to be %v; got %v", y, wantY, gotY)
 	}
 }
+
+func TestResultFor(t *testing.T) {
+	res := stx.NewParseResult("abc", nil, "")
+	res1 := stx.NewParseResult("123", nil, "")
+	res.Append(res1)
+
+	t.Logf("[abc] map: %v", res.ResultMap())
+	if !res.HasResult("123") {
+		t.Errorf("[abc] expected key 123 not to be empty")
+	}
+
+	r1 := res.ResultFor("xyz")
+	if !r1.IsEmpy() {
+		t.Errorf("[abc] expected key xyz to be empty; got %v", r1)
+	}
+}

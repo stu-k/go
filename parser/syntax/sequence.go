@@ -25,6 +25,24 @@ func NewSequence(name string, rules ...Parsable) *Sequence {
 	return &Sequence{name, rules, true}
 }
 
+func (r *Sequence) clone() *Sequence {
+	return &Sequence{
+		name:    r.name,
+		list:    r.list[:],
+		capture: r.capture,
+	}
+}
+
+func (r *Sequence) With(p ...Parsable) *Sequence {
+	new := r.clone()
+	new.list = append(new.list, p...)
+	return new
+}
+func (r *Sequence) Named(n string) *Sequence {
+	new := r.clone()
+	new.name = n
+	return new
+}
 func (r *Sequence) Len() int          { return len(r.list) }
 func (r *Sequence) Add(v ...Parsable) { r.list = append(r.list, v...) }
 func (r *Sequence) Name() string      { return r.name }
@@ -45,7 +63,23 @@ func (r *Sequence) Parse(s string) (*ParseResult, error) {
 	return results, nil
 }
 
-func (r *Sequence) UntilFail(s string) (*ParseResult, error) {
+type untilfailparser struct {
+	s *Sequence
+}
+
+func (p *untilfailparser) Parse(s string) (*ParseResult, error) {
+	return p.s.untilFail(s)
+}
+
+func (p *untilfailparser) Name() string {
+	return p.s.Name()
+}
+
+func (r *Sequence) UntilFail() Parsable {
+	return &untilfailparser{r}
+}
+
+func (r *Sequence) untilFail(s string) (*ParseResult, error) {
 	all := NewParseResult(r.name, nil, s)
 	for {
 		results, err := r.Parse(all.Rest())
@@ -68,7 +102,16 @@ func (r *Sequence) UntilFail(s string) (*ParseResult, error) {
 	return all, nil
 }
 
-func (r *Sequence) AnyOf(s string) (*ParseResult, error) {
+type anyofparser struct{ s *Sequence }
+
+func (p *anyofparser) Parse(s string) (*ParseResult, error) { return p.s.anyOf(s) }
+func (p *anyofparser) Name() string                         { return p.s.Name() }
+
+func (r *Sequence) AnyOf() Parsable {
+	return &anyofparser{r}
+}
+
+func (r *Sequence) anyOf(s string) (*ParseResult, error) {
 	all := NewParseResult(r.name, nil, s)
 	for _, p := range r.list {
 		results, err := p.Parse(s)
@@ -88,8 +131,57 @@ func (r *Sequence) AnyOf(s string) (*ParseResult, error) {
 	return all, nil
 }
 
+type pickoneparser struct{ s *Sequence }
+
+func (p *pickoneparser) Parse(s string) (*ParseResult, error) { return p.s.pickOne(s) }
+func (p *pickoneparser) Name() string                         { return p.s.Name() }
+
+func (r *Sequence) PickOne() Parsable {
+	return &pickoneparser{r}
+}
+
+func (r *Sequence) pickOne(s string) (*ParseResult, error) {
+	res, err := r.anyOf(s)
+	if err != nil {
+		return retErr(r.name, err)
+	}
+	if res.IsEmpy() {
+		return retErr(r.name, errors.NewBadMatchErr(r.name, s))
+	}
+
+	for _, result := range res.ResultMap() {
+		return result, nil
+	}
+
+	return retErr(r.name, errors.NewBadMatchErr(r.name, s))
+}
+
 func retErr(n string, err error) (*ParseResult, error) {
 	return NewParseResult(n, nil, ""), err
+}
+
+type optionalparser struct {
+	s *Sequence
+}
+
+func (p *optionalparser) Parse(s string) (*ParseResult, error) {
+	return p.s.optional(s)
+}
+
+func (p *optionalparser) Name() string {
+	return p.s.Name()
+}
+
+func (r *Sequence) Optional() Parsable {
+	return &optionalparser{r}
+}
+
+func (r *Sequence) optional(s string) (*ParseResult, error) {
+	res, err := r.Parse(s)
+	if err != nil {
+		return NewParseResult(r.name, nil, s), nil
+	}
+	return res, nil
 }
 
 type seqStrArgs struct {

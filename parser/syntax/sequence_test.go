@@ -185,7 +185,7 @@ func TestSeqUntilFail(t *testing.T) {
 	for rs, tests := range sqtests {
 		t.Run(rs.Name(), func(t *testing.T) {
 			for _, test := range tests {
-				got, err := rs.UntilFail(test.in)
+				got, err := rs.UntilFail().Parse(test.in)
 				if !errors.Is(err, test.err) {
 					t.Fatalf("for \"%v\" expected error \"%v\"; got \"%v\"", test.in, test.err, err)
 				}
@@ -296,14 +296,13 @@ func TestSeqAnyOf(t *testing.T) {
 	for sq, tests := range sqTests {
 		t.Run(sq.Name(), func(t *testing.T) {
 			for _, test := range tests {
-				got, err := sq.AnyOf(test.in)
+				got, err := sq.AnyOf().Parse(test.in)
 				if !errors.Is(err, test.err) {
 					t.Fatalf("for \"%v\" expected error \"%v\"; got \"%v\"", test.in, test.err, err)
 				}
 
 				for _, v := range test.want {
-					_, ok := got.NameMap()[v]
-					if !ok {
+					if !got.HasResult(v) {
 						t.Errorf("for \"%v\" expected key \"%v\" in nameMap %v", test.in, v, got.NameMap())
 					}
 				}
@@ -501,4 +500,171 @@ func TestSeqFromStrs(t *testing.T) {
 			}
 		})
 	}
+}
+
+func Test_Integration(t *testing.T) {
+	type testcase struct {
+		in, rest string
+		want     []string
+		seqs     []stx.Parsable
+		err      error
+	}
+
+	tests := make(map[string]testcase)
+
+	tests["parens"] = testcase{
+		"()", "",
+		ss("(", ")"),
+		[]stx.Parsable{
+			stx.NewRule().Named("lparen").Chars("("),
+			stx.NewRule().Named("rparen").Chars(")"),
+		},
+		nil,
+	}
+
+	tests["alpha in parens"] = testcase{
+		"(abc)", "",
+		ss("abc"),
+		[]stx.Parsable{
+			stx.NewRule().Named("lparen").Chars("(").Capture(false),
+			stx.RuleAlpha.Named("alpha"),
+			stx.NewRule().Named("rparen").Chars(")").Capture(false),
+		},
+		nil,
+	}
+
+	tests["alpha comma alpha in parens"] = testcase{
+		"(abc,xyz)", "",
+		ss("abc", "xyz"),
+		[]stx.Parsable{
+			stx.NewRule().Named("lparen").Chars("(").Capture(false),
+			stx.RuleAlpha.Named("alpha1"),
+			stx.NewRule().Named("comma").Chars(",").Capture(false),
+			stx.RuleAlpha.Named("alpha2"),
+			stx.NewRule().Named("rparen").Chars(")").Capture(false),
+		},
+		nil,
+	}
+
+	tests["alpha comma repeat in parens"] = testcase{
+		"(foo,bar,baz,)", "",
+		ss("foo", "bar", "baz"),
+		[]stx.Parsable{
+			stx.NewRule().Named("lparen").Chars("(").Capture(false),
+			stx.NewSequence("alpha comma",
+				stx.RuleAlpha.Named("alpha"),
+				stx.NewRule().Named("comma").Chars(",").Capture(false),
+			).UntilFail(),
+			stx.NewRule().Named("rparen").Chars(")").Capture(false),
+		},
+		nil,
+	}
+
+	tests["quoted alpha comma repeat in parens"] = testcase{
+		"('foo','bar','baz',)", "",
+		ss("foo", "bar", "baz"),
+		[]stx.Parsable{
+			stx.NewRule().Named("lparen").Chars("(").Capture(false),
+			stx.NewSequence("alpha comma",
+				stx.NewRule().Named("apos").Chars("'").Capture(false),
+				stx.RuleAlpha.Named("alpha"),
+				stx.NewRule().Named("apos").Chars("'").Capture(false),
+				stx.NewRule().Named("comma").Chars(",").Capture(false),
+			).UntilFail(),
+			stx.NewRule().Named("rparen").Chars(")").Capture(false),
+		},
+		nil,
+	}
+
+	tests["quoted alpha comma repeat in parens"] = testcase{
+		"('foo','bar','baz',)", "",
+		ss("foo", "bar", "baz"),
+		[]stx.Parsable{
+			stx.NewRule().Named("lparen").Chars("(").Capture(false),
+			stx.NewSequence("alpha comma",
+				stx.NewRule().Named("apos").Chars("'").Capture(false),
+				stx.RuleAlpha.Named("alpha"),
+				stx.NewRule().Named("apos").Chars("'").Capture(false),
+				stx.NewRule().Named("comma").Chars(",").Capture(false),
+			).UntilFail(),
+			stx.NewRule().Named("rparen").Chars(")").Capture(false),
+		},
+		nil,
+	}
+
+	keyval := stx.NewSequence("k/'k':n",
+		stx.NewSequence("'v'/v",
+			stx.NewSequence("'al'",
+				stx.NewRule().Named("apos").Chars("'").Capture(false),
+				stx.RuleAlpha.Named("alpha"),
+				stx.NewRule().Named("apos").Chars("'").Capture(false),
+			),
+			stx.NewSequence("al",
+				stx.RuleAlpha.Named("alpha"),
+			),
+		).PickOne(),
+		stx.NewRule().Named("colon").Chars(":").Capture(false),
+		stx.RuleNum.Named("num"),
+	)
+	keyvalcomma := keyval.Named("k/'k':n,").With(
+		stx.NewRule().Named("comma").Chars(",").Capture(false),
+	)
+	kvtuple := stx.NewSequence("kvtuple",
+		stx.NewRule().Named("lparen").Chars("(").Capture(false),
+		keyvalcomma.UntilFail(),
+		keyval,
+		stx.NewRule().Named("rparen").Chars(")").Capture(false),
+	)
+	tests["quoted alpha comma repeat in parens"] = testcase{
+		"('foo':1,bar:2,'baz':3,quux:4) ()", " ()",
+		ss("foo", "1", "bar", "2", "baz", "3", "quux", "4"),
+		[]stx.Parsable{kvtuple},
+		nil,
+	}
+
+	for name, test := range tests {
+		seq := stx.NewSequence(name, test.seqs...)
+		tstFn(t, name, test.in, seq, test.want, test.err, test.rest)
+		res, err := seq.Parse(test.in)
+		if res == nil {
+			t.Fatalf("[%v] result nil", name)
+		}
+
+		if !errors.Is(test.err, err) {
+			t.Errorf("[%v] wanted error %v; got %v", name, test.err, err)
+		}
+
+		got := res.Strings()
+		if !eq(got, test.want) {
+			t.Errorf("[%v] wanted result %v; got %v", name, test.want, got)
+		}
+
+		rest := res.Rest()
+		if rest != test.rest {
+			t.Errorf("[%v] wanted rest %v; got %v", name, test.rest, rest)
+		}
+	}
+}
+
+var tstFn = func(t *testing.T, name string, in string, p stx.Parsable, want []string, err error, rest string) {
+	t.Run(name, func(t *testing.T) {
+		res, goterr := p.Parse(in)
+		if res == nil {
+			t.Fatalf("[%v] result nil", name)
+		}
+
+		if !errors.Is(err, goterr) {
+			t.Errorf("[%v] wanted error %v; got %v", name, err, goterr)
+		}
+
+		got := res.Strings()
+		if !eq(got, want) {
+			t.Errorf("[%v] wanted result %v; got %v", name, want, got)
+		}
+
+		gotrest := res.Rest()
+		if rest != gotrest {
+			t.Errorf("[%v] wanted rest %v; got %v", name, rest, gotrest)
+		}
+	})
 }
