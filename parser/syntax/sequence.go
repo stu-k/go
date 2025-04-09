@@ -46,7 +46,11 @@ func (r *Sequence) Named(n string) *Sequence {
 func (r *Sequence) Len() int          { return len(r.list) }
 func (r *Sequence) Add(v ...Parsable) { r.list = append(r.list, v...) }
 func (r *Sequence) Name() string      { return r.name }
-func (r *Sequence) SetCapture(v bool) { r.capture = v }
+func (r *Sequence) SetCapture(v bool) *Sequence {
+	new := r.clone()
+	new.capture = v
+	return new
+}
 func (r *Sequence) Parse(s string) (*ParseResult, error) {
 	results := NewParseResult(r.name, nil, s)
 	for _, rule := range r.list {
@@ -125,7 +129,7 @@ func (r *Sequence) anyOf(s string) (*ParseResult, error) {
 	}
 
 	if all.Len() == 0 {
-		return retErr(r.name, errors.NewBadMatchErr(r.name, s))
+		return retErr(r.name, errors.NewBadMatchErr(r.name, s, "anyof:emptyres"))
 	}
 
 	return all, nil
@@ -146,14 +150,14 @@ func (r *Sequence) pickOne(s string) (*ParseResult, error) {
 		return retErr(r.name, err)
 	}
 	if res.IsEmpy() {
-		return retErr(r.name, errors.NewBadMatchErr(r.name, s))
+		return retErr(r.name, errors.NewBadMatchErr(r.name, s, "pickone:isempty"))
 	}
 
 	for _, result := range res.ResultMap() {
 		return result, nil
 	}
 
-	return retErr(r.name, errors.NewBadMatchErr(r.name, s))
+	return retErr(r.name, errors.NewBadMatchErr(r.name, s, "pickone:nores"))
 }
 
 func retErr(n string, err error) (*ParseResult, error) {

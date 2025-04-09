@@ -147,11 +147,11 @@ func (a *Rule) Parse(s string) (*ParseResult, error) {
 
 func (a *Rule) parseStr(match, s string) (*ParseResult, error) {
 	if len(s) == 0 || len(match) == 0 {
-		return retErr(a.name, errors.NewBadMatchErr(a.name, s))
+		return retErr(a.name, errors.NewBadMatchErr(a.name, s, "parsestr:emptystr"))
 	}
 
 	if !strings.HasPrefix(s, match) {
-		return retErr(a.name, errors.NewBadMatchErr(a.name, s))
+		return retErr(a.name, errors.NewBadMatchErr(a.name, s, "parsestr:noprefix"))
 	}
 
 	return NewParseResult(a.name, []string{match}, s[len(match):]), nil
@@ -159,7 +159,7 @@ func (a *Rule) parseStr(match, s string) (*ParseResult, error) {
 
 func (a *Rule) parseStrRepeat(match, s string, n int) (*ParseResult, error) {
 	if len(s) == 0 || len(match) == 0 {
-		return retErr(a.name, errors.NewBadMatchErr(a.name, s))
+		return retErr(a.name, errors.NewBadMatchErr(a.name, s, "parsestrrepeat:emptystr"))
 	}
 
 	var count int
@@ -168,7 +168,7 @@ func (a *Rule) parseStrRepeat(match, s string, n int) (*ParseResult, error) {
 		result, err := a.parseStr(match, results.Rest())
 		if err != nil {
 			if results.Len() == 0 {
-				return retErr(a.name, errors.NewBadMatchErr(a.name, s))
+				return retErr(a.name, errors.NewBadMatchErr(a.name, s, "parsestrrepeat:nofirstmatch"))
 			}
 			break
 		}
@@ -177,8 +177,11 @@ func (a *Rule) parseStrRepeat(match, s string, n int) (*ParseResult, error) {
 		count++
 	}
 
-	if results.Len() == 0 || count < n {
-		return retErr(a.name, errors.NewBadMatchErr(a.name, s))
+	if results.Len() == 0 {
+		return retErr(a.name, errors.NewBadMatchErr(a.name, s, "parsestrrepeat:emptyresult"))
+	}
+	if count < n {
+		return retErr(a.name, errors.NewBadMatchErr(a.name, s, "parsestrrepeat:lowcount"))
 	}
 
 	return results, nil
@@ -187,7 +190,7 @@ func (a *Rule) parseStrRepeat(match, s string, n int) (*ParseResult, error) {
 func (a *Rule) parseChar(s string) (*ParseResult, error) {
 	shouldRepeat := a.repeat >= 0
 	if len(s) == 0 {
-		return retErr(a.name, errors.NewBadMatchErr(a.name, s))
+		return retErr(a.name, errors.NewBadMatchErr(a.name, s, "rule:parsechar:emptystr"))
 	}
 
 	var result string
@@ -203,11 +206,11 @@ func (a *Rule) parseChar(s string) (*ParseResult, error) {
 	// or invalid character
 	checkEnd := func(ct int) error {
 		if len(result) == 0 {
-			return errors.NewBadMatchErr(a.name, s)
+			return errors.NewBadMatchErr(a.name, s, "parsechar:noresult")
 		}
 
 		if shouldRepeat && ct < a.repeat {
-			return errors.NewBadMatchErr(a.name, s)
+			return errors.NewBadMatchErr(a.name, s, "parsechar:lowcount")
 		}
 
 		return nil

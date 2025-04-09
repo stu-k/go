@@ -668,3 +668,88 @@ var tstFn = func(t *testing.T, name string, in string, p stx.Parsable, want []st
 		}
 	})
 }
+
+func Test_Integration2(t *testing.T) {
+	tst := func(p stx.Parsable, in string, want []string, rest string, err error) {
+		got, goterr := p.Parse(in)
+		if !errors.Is(goterr, err) {
+			t.Fatalf("[%v] expected error %v; got %v", p.Name(), err, goterr)
+		}
+
+		if err != nil {
+			t.Fatalf("[%v] expected no error; got %v", p.Name(), err)
+		}
+
+		if got == nil {
+			t.Fatalf("[%v] expected result not to be nil", p.Name())
+		}
+
+		if !eq(got.Strings(), want) {
+			t.Errorf("[%v] expected result %v; got %v", p.Name(), want, got.Strings())
+		}
+	}
+
+	apos := stx.NewRule().Named("apos").Chars("'").Repeat(1).Capture(false)
+	comma := stx.NewRule().Named("comma").Chars(",").Repeat(1).Capture(false)
+	lbracket := stx.NewRule().Named("lbracket").Chars("[").Repeat(1).Capture(false)
+	rbracket := stx.NewRule().Named("rbracket").Chars("]").Repeat(1).Capture(false)
+
+	num := stx.RuleNum
+	alp := stx.RuleAlpha
+	alphanum := stx.NewSequence("alphanum",
+		alp, num,
+	).PickOne()
+	str := stx.NewSequence("quoted",
+		apos, alphanum, apos,
+	)
+
+	anyVal := stx.NewSequence("anyval",
+		alp, num, str,
+	).PickOne()
+	valComma := stx.NewSequence("anyval comma",
+		anyVal, comma,
+	)
+	valCommaEnd := stx.NewSequence("anyval comma end optional",
+		valComma.UntilFail(),
+		anyVal,
+	)
+
+	arr := stx.NewSequence("arr",
+		lbracket,
+		valCommaEnd,
+		rbracket,
+	)
+
+	t.Run("arr", func(t *testing.T) {
+		tst(arr,
+			"['abc',123,xyz]",
+			ss("abc", "123", "xyz"),
+			"", nil)
+	})
+
+	colon := stx.NewRule().Named("colon").Chars(":").Repeat(1).Capture(false)
+	kv := stx.NewSequence("kv",
+		anyVal, colon, anyVal,
+	)
+	kvComma := kv.Named("kv comma").
+		With(comma)
+	kvRepeat := stx.NewSequence("kv(,)",
+		kvComma.UntilFail(),
+		kv,
+	)
+
+	lbrace := stx.NewRule().Named("lbrace").Chars("{").Repeat(1).Capture(false)
+	rbrace := stx.NewRule().Named("rbrace").Chars("}").Repeat(1).Capture(false)
+	object := stx.NewSequence("object",
+		lbrace,
+		kvRepeat,
+		rbrace,
+	)
+	t.Run("object", func(t *testing.T) {
+		tst(object,
+			"{abc:123,'xyz':'321',zyx:cba}",
+			ss("abc", "123", "xyz", "321", "zyx", "cba"),
+			"", nil)
+	})
+
+}

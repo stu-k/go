@@ -57,14 +57,23 @@ var ErrBadMatch = fmt.Errorf("bad match")
 type BadMatchErr struct {
 	name string
 	bad  string
+	tag  string
 }
 
 func (e BadMatchErr) Error() string {
-	return fmt.Sprintf("bad match for %s: \"%s\"", e.name, e.bad)
+	info := e.tag
+	if info != "" {
+		info = "[" + info + "]"
+	}
+	return fmt.Sprintf("bad match for %s%v: \"%s\"", e.name, info, e.bad)
 }
 func (e BadMatchErr) Unwrap() error { return ErrBadMatch }
-func NewBadMatchErr(name, bad string) error {
-	return BadMatchErr{name, bad}
+func NewBadMatchErr(name, bad string, v ...string) error {
+	tag := ""
+	if len(v) > 0 {
+		tag = v[0]
+	}
+	return BadMatchErr{name, bad, tag}
 }
 
 func HandleError(err error) (data, string, error) {
