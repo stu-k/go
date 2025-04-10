@@ -257,15 +257,15 @@ func TestSeqAnyOf(t *testing.T) {
 		{"aa", ss("alp", "1a", "2alp"), nil},
 		{"aaa", ss("alp", "1a", "2alp"), nil},
 
-		{"b", ss("alp"), nil}, // passes
+		{"b", ss("alp"), nil},
 		{"bb", ss("alp", "2b", "2alp"), nil},
 		{"bbb", ss("alp", "2b", "2alp"), nil},
 
-		{"x", ss("alp"), nil}, // passes
+		{"x", ss("alp"), nil},
 		{"xy", ss("alp", "2alp"), nil},
 
-		{"", ss(), errs.ErrBadMatch},  // passes
-		{".", ss(), errs.ErrBadMatch}, // passes
+		{"", ss(), errs.ErrBadMatch},
+		{".", ss(), errs.ErrBadMatch},
 	}
 
 	sq1, err = mk(

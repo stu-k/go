@@ -226,7 +226,7 @@ func newSequenceFromStrs(name string, pmap map[string]*Rule, parts ...string) (*
 			switch rune(arg[0]) {
 
 			case 'r':
-				// dangeroud to pull from pmap
+				// dangerous to pull from pmap
 				// can mutate origin rules
 				seq, ok := pmap[arg[1:]]
 				if !ok || seq == nil {
