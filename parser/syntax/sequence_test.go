@@ -147,7 +147,7 @@ func TestSeqUntilFail(t *testing.T) {
 		{"a.", ss("a"), ".", nil},
 		{"ab.", ss("a", "b"), ".", nil},
 
-		{".", ss(), "", errs.ErrBadMatch},
+		{".", ss(), "", nil},
 	}
 
 	sq, err = mk(
@@ -163,7 +163,7 @@ func TestSeqUntilFail(t *testing.T) {
 		{"a,b", ss("a", ","), "b", nil},
 		{"a,", ss("a", ","), "", nil},
 
-		{".", ss(), "", errs.ErrBadMatch},
+		{".", ss(), "", nil},
 	}
 
 	sq, err = mk(
@@ -179,7 +179,7 @@ func TestSeqUntilFail(t *testing.T) {
 		{"a:1", ss("a", ":", "1"), "", nil},
 		{"a:1b:", ss("a", ":", "1"), "b:", nil},
 
-		{".", ss(), "", errs.ErrBadMatch},
+		{".", ss(), "", nil},
 	}
 
 	for rs, tests := range sqtests {

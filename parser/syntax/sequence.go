@@ -88,23 +88,25 @@ func (r *Sequence) UntilFail() Parsable {
 func (r *Sequence) untilFail(s string) (*Result, error) {
 	all := NewResult(r.name, nil, s)
 	for {
-		results, err := r.Parse(all.Rest())
-		if err != nil {
+		results, _ := r.Parse(all.Rest())
+		if results.IsEmpy() {
 			if len(all.Strings()) == 0 {
-				return retErr(r.name, err)
+				return NewResult(r.name, nil, ""), nil
 			}
 			return all, nil
 		}
 
-		if r.capture {
-			all.Append(results)
-		}
-
+		all.Append(results)
 		all.SetRest(results.Rest())
 		if len(results.Rest()) == 0 {
 			break
 		}
 	}
+
+	if !r.capture {
+		return NewResult(r.name, nil, ""), nil
+	}
+
 	return all, nil
 }
 
@@ -118,20 +120,21 @@ func (r *Sequence) AnyOf() Parsable {
 }
 
 func (r *Sequence) anyOf(s string) (*Result, error) {
-	all := NewResult(r.name, nil, s)
+	all := NewResult(r.name, nil, "")
 	for _, p := range r.list {
-		results, err := p.Parse(s)
-		if err != nil {
+		results, _ := p.Parse(s)
+		if results.IsEmpy() {
 			continue
 		}
-
-		if r.capture {
-			all.Append(results)
-		}
+		all.Append(results)
 	}
 
-	if len(all.Strings()) == 0 {
+	if all.IsEmpy() {
 		return retErr(r.name, errors.NewBadMatchErr(r.name, s, "anyof:emptyres"))
+	}
+
+	if !r.capture {
+		return NewResult(r.name, nil, ""), nil
 	}
 
 	return all, nil
@@ -147,19 +150,16 @@ func (r *Sequence) PickOne() Parsable {
 }
 
 func (r *Sequence) pickOne(s string) (*Result, error) {
-	res, err := r.anyOf(s)
-	if err != nil {
-		return retErr(r.name, err)
-	}
+	res, _ := r.anyOf(s)
 	if res.IsEmpy() {
-		return retErr(r.name, errors.NewBadMatchErr(r.name, s, "pickone:isempty"))
+		return NewResult(r.name, nil, ""), nil
 	}
 
 	for _, result := range res.ResultMap() {
 		return result, nil
 	}
 
-	return retErr(r.name, errors.NewBadMatchErr(r.name, s, "pickone:nores"))
+	return NewResult(r.name, nil, ""), nil
 }
 
 func retErr(n string, err error) (*Result, error) {

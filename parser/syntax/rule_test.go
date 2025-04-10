@@ -153,19 +153,19 @@ func TestRuleStr(t *testing.T) {
 	rulemap[stx.RuleAlpha.Named("check a 3").CheckStr("a").Repeat(3)] = []testobj{
 		{"aaa", ss("a", "a", "a"), "", nil},
 		{"aaaa", ss("a", "a", "a"), "a", nil},
-		{"a", ss(), "", errs.ErrBadMatch},
-		{"aa", ss(), "", errs.ErrBadMatch},
-		{"abc", ss(), "", errs.ErrBadMatch},
-		{".", ss(), "", errs.ErrBadMatch},
+		{"a", ss(), "", nil},
+		{"aa", ss(), "", nil},
+		{"abc", ss(), "", nil},
+		{".", ss(), "", nil},
 		{"", ss(), "", errs.ErrBadMatch},
 	}
 
 	rulemap[stx.RuleAlpha.Named("check ab 2").CheckStr("ab").Repeat(2)] = []testobj{
 		{"abab", ss("ab", "ab"), "", nil},
 		{"ababc", ss("ab", "ab"), "c", nil},
-		{"ab", ss(), "", errs.ErrBadMatch},
-		{"aba", ss(), "", errs.ErrBadMatch},
-		{".", ss(), "", errs.ErrBadMatch},
+		{"ab", ss(), "", nil},
+		{"aba", ss(), "", nil},
+		{".", ss(), "", nil},
 		{"", ss(), "", errs.ErrBadMatch},
 	}
 

@@ -164,11 +164,8 @@ func (a *Rule) parseStrRepeat(match, s string, n int) (*Result, error) {
 	var count int
 	results := NewResult(a.name, nil, s)
 	for i := 0; i < n; i++ {
-		result, err := a.parseStr(match, results.Rest())
-		if err != nil {
-			if results.IsEmpy() {
-				return retErr(a.name, errors.NewBadMatchErr(a.name, s, "parsestrrepeat:nofirstmatch"))
-			}
+		result, _ := a.parseStr(match, results.Rest())
+		if result.IsEmpy() {
 			break
 		}
 		results.Append(result)
@@ -177,10 +174,10 @@ func (a *Rule) parseStrRepeat(match, s string, n int) (*Result, error) {
 	}
 
 	if results.IsEmpy() {
-		return retErr(a.name, errors.NewBadMatchErr(a.name, s, "parsestrrepeat:emptyresult"))
+		return NewResult(a.name, nil, ""), nil
 	}
 	if count < n {
-		return retErr(a.name, errors.NewBadMatchErr(a.name, s, "parsestrrepeat:lowcount"))
+		return NewResult(a.name, nil, ""), nil
 	}
 
 	return results, nil
@@ -232,8 +229,10 @@ func (p charParser) Parse(s string) (*Result, error) {
 		return retErr(p.name, errors.NewBadMatchErr(p.name, s, "parsechar:toofew"))
 	}
 
-	if p.capture {
-		return NewResult(p.name, []string{result}, s[count:]), nil
+	if !p.capture {
+		return NewResult(p.name, nil, s[count:]), nil
 	}
-	return NewResult(p.name, nil, s[count:]), nil
+
+	return NewResult(p.name, []string{result}, s[count:]), nil
+
 }
