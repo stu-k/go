@@ -671,6 +671,10 @@ func Test_Integration2(t *testing.T) {
 		if !eq(got.Strings(), want) {
 			t.Errorf("[%v] expected result %v; got %v", p.Name(), want, got.Strings())
 		}
+
+		if got.Rest() != rest {
+			t.Errorf("[%v] expected rest %v; got %v", p.Name(), rest, got.Rest())
+		}
 	}
 
 	apos := stx.NewRule("apos").Repeat(1).Chars("'").Capture(false)

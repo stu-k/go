@@ -22,6 +22,9 @@ func NewSequence(name string, rules ...Parsable) *Sequence {
 	return &Sequence{name, rules, true}
 }
 
+func (r *Sequence) Seq() *Sequence {
+	return r
+}
 func (r *Sequence) clone() *Sequence {
 	return &Sequence{
 		name:    r.name,

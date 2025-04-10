@@ -65,7 +65,7 @@ func (e BadMatchErr) Error() string {
 	if info != "" {
 		info = "[" + info + "]"
 	}
-	return fmt.Sprintf("bad match for %s%v: \"%s\"", e.name, info, e.bad)
+	return fmt.Sprintf("%vbad match for %s: \"%s\"", info, e.name, e.bad)
 }
 func (e BadMatchErr) Unwrap() error { return ErrBadMatch }
 func NewBadMatchErr(name, bad string, v ...string) error {
