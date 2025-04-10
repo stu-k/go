@@ -13,17 +13,18 @@ var defaultRulemap = map[string]*Rule{
 	"num":   RuleNum,
 }
 
-var RuleAny = &Rule{
-	name:      "any",
+var ruleAny = &Rule{
+	name:      "DEFAULT_ANY_RULE",
 	repeat:    -1,
 	capture:   true,
 	checkChar: func(_ string) bool { return true },
 	checkStr:  "",
+	modified:  false,
 }
 
-var RuleAlpha = RuleAny.Named("alpha").CheckChar(unicode.IsLetter)
+var RuleAlpha = NewRule("alpha").CheckChar(unicode.IsLetter)
 
-var RuleNum = RuleAny.Named("num").CheckChar(unicode.IsNumber)
+var RuleNum = NewRule("num").CheckChar(unicode.IsNumber)
 
 // Rule defines a set of variables to parse a token by
 type Rule struct {
@@ -46,9 +47,12 @@ type Rule struct {
 
 	// checkStr is the exact string for a rule to parse against
 	checkStr string
+
+	// modified informs if the rule has been changed from the default
+	modified bool
 }
 
-func NewRule() *Rule { return RuleAny.clone() }
+func NewRule(n string) *Rule { return ruleAny.clone().Named(n) }
 
 func (a *Rule) clone() *Rule {
 	new := &Rule{
@@ -56,13 +60,14 @@ func (a *Rule) clone() *Rule {
 		repeat:   a.repeat,
 		capture:  a.capture,
 		checkStr: a.checkStr,
+		modified: true,
 	}
 	new.checkChar = a.checkChar
 	return new
 }
 
 func (a *Rule) IsAny() bool {
-	return a == RuleAny
+	return !a.modified && a.name != "DEFAULT_ANY_RULE"
 }
 
 func (a *Rule) Named(s string) *Rule {
@@ -76,29 +81,25 @@ func (a *Rule) Name() string {
 }
 
 func (a *Rule) CheckChar(fn func(rune) bool) *Rule {
-	new := a.clone()
-	new.checkChar = func(s string) bool {
+	a.checkChar = func(s string) bool {
 		return len(s) > 0 && fn(rune(s[0]))
 	}
-	new.checkStr = ""
-	return new
+	a.checkStr = ""
+	return a
 }
 
 func (a *Rule) CheckStr(s string) *Rule {
-	new := a.clone()
-	new.checkStr = s
-	new.checkChar = nil
-	return new
+	a.checkStr = s
+	a.checkChar = nil
+	return a
 }
 
 func (a *Rule) Capture(v bool) *Rule {
-	new := a.clone()
-	new.capture = v
-	return new
+	a.capture = v
+	return a
 }
 
 func (a *Rule) Chars(s string) *Rule {
-	new := a.clone()
 	m := make(map[string]struct{})
 
 	for _, v := range s {
@@ -110,11 +111,11 @@ func (a *Rule) Chars(s string) *Rule {
 		return ok
 	}
 
-	new.checkChar = check
-	return new
+	a.checkChar = check
+	return a
 }
 
-func (a *Rule) ToSeq() *Sequence {
+func (a *Rule) Seq() *Sequence {
 	s := NewSequence(a.name, a)
 	return s
 }

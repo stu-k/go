@@ -3,7 +3,6 @@ package syntax_test
 import (
 	"errors"
 	"testing"
-	"unicode"
 
 	errs "github.com/stu-k/go/parser/errors"
 	stx "github.com/stu-k/go/parser/syntax"
@@ -63,7 +62,7 @@ func TestRuleChar(t *testing.T) {
 		{"", "", "", errs.ErrBadMatch},
 	}
 
-	rulemap[stx.RuleAlpha.Repeat(3)] = []testobj{
+	rulemap[stx.RuleAlpha.Named("rep 3").Repeat(3)] = []testobj{
 		{"abc", "abc", "", nil},
 		{"abcd", "abc", "d", nil},
 		{"abc.", "abc", ".", nil},
@@ -73,7 +72,7 @@ func TestRuleChar(t *testing.T) {
 		{"", "", "", errs.ErrBadMatch},
 	}
 
-	rulemap[stx.RuleAlpha.Capture(false)] = []testobj{
+	rulemap[stx.RuleAlpha.Named("no cap").Capture(false)] = []testobj{
 		{"a", "", "", nil},
 		{"ab", "", "", nil},
 		{"abc", "", "", nil},
@@ -86,7 +85,7 @@ func TestRuleChar(t *testing.T) {
 		{"", "", "", errs.ErrBadMatch},
 	}
 
-	rulemap[stx.RuleAny.CheckChar(unicode.IsNumber)] = []testobj{
+	rulemap[stx.RuleNum] = []testobj{
 		{"1", "1", "", nil},
 		{"12", "12", "", nil},
 		{"123", "123", "", nil},
@@ -97,7 +96,7 @@ func TestRuleChar(t *testing.T) {
 		{"", "", "", errs.ErrBadMatch},
 	}
 
-	rulemap[stx.RuleAny.Chars("a1")] = []testobj{
+	rulemap[stx.NewRule("chars a1").Chars("a1")] = []testobj{
 		{"a", "a", "", nil},
 		{"aa", "aa", "", nil},
 		{"1", "1", "", nil},
@@ -143,7 +142,7 @@ func TestRuleStr(t *testing.T) {
 
 	rulemap := make(map[*stx.Rule][]testobj)
 
-	rulemap[stx.RuleAlpha.CheckStr("a").Named("check a")] = []testobj{
+	rulemap[stx.RuleAlpha.Named("check a").CheckStr("a")] = []testobj{
 		{"a", ss("a"), "", nil},
 		{"aa", ss("a"), "a", nil},
 		{"abc", ss("a"), "bc", nil},
@@ -151,7 +150,7 @@ func TestRuleStr(t *testing.T) {
 		{"", ss(), "", errs.ErrBadMatch},
 	}
 
-	rulemap[stx.RuleAlpha.CheckStr("a").Repeat(3).Named("check a 3")] = []testobj{
+	rulemap[stx.RuleAlpha.Named("check a 3").CheckStr("a").Repeat(3)] = []testobj{
 		{"aaa", ss("a", "a", "a"), "", nil},
 		// {"aaaa", ss("a", "a", "a"), "a", nil},
 		// {"a", ss(), "", errs.ErrBadMatch},

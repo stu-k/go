@@ -51,7 +51,7 @@ func TestSequence(t *testing.T) {
 	sequence = stx.NewSequence(
 		"kv(var var)",
 		stx.RuleAlpha,
-		stx.RuleAny.Chars(":"),
+		stx.NewRule(":").Chars(":"),
 		stx.RuleNum,
 	)
 	sqTests[sequence] = []seqtest{
@@ -66,11 +66,11 @@ func TestSequence(t *testing.T) {
 
 	sequence = stx.NewSequence(
 		"obj(kv(var var))",
-		stx.RuleAny.Chars("{"),
+		stx.NewRule("{").Chars("{"),
 		stx.RuleAlpha,
-		stx.RuleAny.Chars(":"),
+		stx.NewRule(":").Chars(":"),
 		stx.RuleAlpha,
-		stx.RuleAny.Chars("}"),
+		stx.NewRule("}").Chars("}"),
 	)
 	sqTests[sequence] = []seqtest{
 		{"{a:x}", sequence, ss("{", "a", ":", "x", "}"), "", nil},
@@ -81,13 +81,13 @@ func TestSequence(t *testing.T) {
 
 	sequence = stx.NewSequence(
 		"obj(kv(_var_ var))",
-		stx.RuleAny.Chars("{"),
-		stx.RuleAny.Chars("_"),
+		stx.NewRule("").Chars("{"),
+		stx.NewRule("").Chars("_"),
 		stx.RuleAlpha,
-		stx.RuleAny.Chars("_"),
-		stx.RuleAny.Chars(":"),
+		stx.NewRule("").Chars("_"),
+		stx.NewRule("").Chars(":"),
 		stx.RuleAlpha,
-		stx.RuleAny.Chars("}"),
+		stx.NewRule("").Chars("}"),
 	)
 	sqTests[sequence] = []seqtest{
 		{"{_a_:x}", sequence, ss("{", "_", "a", "_", ":", "x", "}"), "", nil},
@@ -516,8 +516,8 @@ func Test_Integration(t *testing.T) {
 		"()", "",
 		ss("(", ")"),
 		[]stx.Parsable{
-			stx.NewRule().Named("lparen").Chars("("),
-			stx.NewRule().Named("rparen").Chars(")"),
+			stx.NewRule("lparen").Chars("("),
+			stx.NewRule("rparen").Chars(")"),
 		},
 		nil,
 	}
@@ -526,9 +526,9 @@ func Test_Integration(t *testing.T) {
 		"(abc)", "",
 		ss("abc"),
 		[]stx.Parsable{
-			stx.NewRule().Named("lparen").Chars("(").Capture(false),
+			stx.NewRule("lparen").Chars("(").Capture(false),
 			stx.RuleAlpha.Named("alpha"),
-			stx.NewRule().Named("rparen").Chars(")").Capture(false),
+			stx.NewRule("rparen").Chars(")").Capture(false),
 		},
 		nil,
 	}
@@ -537,11 +537,11 @@ func Test_Integration(t *testing.T) {
 		"(abc,xyz)", "",
 		ss("abc", "xyz"),
 		[]stx.Parsable{
-			stx.NewRule().Named("lparen").Chars("(").Capture(false),
+			stx.NewRule("lparen").Chars("(").Capture(false),
 			stx.RuleAlpha.Named("alpha1"),
-			stx.NewRule().Named("comma").Chars(",").Capture(false),
+			stx.NewRule("comma").Chars(",").Capture(false),
 			stx.RuleAlpha.Named("alpha2"),
-			stx.NewRule().Named("rparen").Chars(")").Capture(false),
+			stx.NewRule("rparen").Chars(")").Capture(false),
 		},
 		nil,
 	}
@@ -550,12 +550,12 @@ func Test_Integration(t *testing.T) {
 		"(foo,bar,baz,)", "",
 		ss("foo", "bar", "baz"),
 		[]stx.Parsable{
-			stx.NewRule().Named("lparen").Chars("(").Capture(false),
+			stx.NewRule("lparen").Chars("(").Capture(false),
 			stx.NewSequence("alpha comma",
 				stx.RuleAlpha.Named("alpha"),
-				stx.NewRule().Named("comma").Chars(",").Capture(false),
+				stx.NewRule("comma").Chars(",").Capture(false),
 			).UntilFail(),
-			stx.NewRule().Named("rparen").Chars(")").Capture(false),
+			stx.NewRule("rparen").Chars(")").Capture(false),
 		},
 		nil,
 	}
@@ -564,14 +564,14 @@ func Test_Integration(t *testing.T) {
 		"('foo','bar','baz',)", "",
 		ss("foo", "bar", "baz"),
 		[]stx.Parsable{
-			stx.NewRule().Named("lparen").Chars("(").Capture(false),
+			stx.NewRule("lparen").Chars("(").Capture(false),
 			stx.NewSequence("alpha comma",
-				stx.NewRule().Named("apos").Chars("'").Capture(false),
+				stx.NewRule("apos").Chars("'").Capture(false),
 				stx.RuleAlpha.Named("alpha"),
-				stx.NewRule().Named("apos").Chars("'").Capture(false),
-				stx.NewRule().Named("comma").Chars(",").Capture(false),
+				stx.NewRule("apos").Chars("'").Capture(false),
+				stx.NewRule("comma").Chars(",").Capture(false),
 			).UntilFail(),
-			stx.NewRule().Named("rparen").Chars(")").Capture(false),
+			stx.NewRule("rparen").Chars(")").Capture(false),
 		},
 		nil,
 	}
@@ -580,14 +580,14 @@ func Test_Integration(t *testing.T) {
 		"('foo','bar','baz',)", "",
 		ss("foo", "bar", "baz"),
 		[]stx.Parsable{
-			stx.NewRule().Named("lparen").Chars("(").Capture(false),
+			stx.NewRule("lparen").Chars("(").Capture(false),
 			stx.NewSequence("alpha comma",
-				stx.NewRule().Named("apos").Chars("'").Capture(false),
+				stx.NewRule("apos").Chars("'").Capture(false),
 				stx.RuleAlpha.Named("alpha"),
-				stx.NewRule().Named("apos").Chars("'").Capture(false),
-				stx.NewRule().Named("comma").Chars(",").Capture(false),
+				stx.NewRule("apos").Chars("'").Capture(false),
+				stx.NewRule("comma").Chars(",").Capture(false),
 			).UntilFail(),
-			stx.NewRule().Named("rparen").Chars(")").Capture(false),
+			stx.NewRule("rparen").Chars(")").Capture(false),
 		},
 		nil,
 	}
@@ -595,25 +595,25 @@ func Test_Integration(t *testing.T) {
 	keyval := stx.NewSequence("k/'k':n",
 		stx.NewSequence("'v'/v",
 			stx.NewSequence("'al'",
-				stx.NewRule().Named("apos").Chars("'").Capture(false),
+				stx.NewRule("apos").Chars("'").Capture(false),
 				stx.RuleAlpha.Named("alpha"),
-				stx.NewRule().Named("apos").Chars("'").Capture(false),
+				stx.NewRule("apos").Chars("'").Capture(false),
 			),
 			stx.NewSequence("al",
 				stx.RuleAlpha.Named("alpha"),
 			),
 		).PickOne(),
-		stx.NewRule().Named("colon").Chars(":").Capture(false),
+		stx.NewRule("colon").Chars(":").Capture(false),
 		stx.RuleNum.Named("num"),
 	)
 	keyvalcomma := keyval.Named("k/'k':n,").With(
-		stx.NewRule().Named("comma").Chars(",").Capture(false),
+		stx.NewRule("comma").Chars(",").Capture(false),
 	)
 	kvtuple := stx.NewSequence("kvtuple",
-		stx.NewRule().Named("lparen").Chars("(").Capture(false),
+		stx.NewRule("lparen").Chars("(").Capture(false),
 		keyvalcomma.UntilFail(),
 		keyval,
-		stx.NewRule().Named("rparen").Chars(")").Capture(false),
+		stx.NewRule("rparen").Chars(")").Capture(false),
 	)
 	tests["quoted alpha comma repeat in parens"] = testcase{
 		"('foo':1,bar:2,'baz':3,quux:4) ()", " ()",
@@ -689,10 +689,10 @@ func Test_Integration2(t *testing.T) {
 		}
 	}
 
-	apos := stx.NewRule().Named("apos").Chars("'").Repeat(1).Capture(false)
-	comma := stx.NewRule().Named("comma").Chars(",").Repeat(1).Capture(false)
-	lbracket := stx.NewRule().Named("lbracket").Chars("[").Repeat(1).Capture(false)
-	rbracket := stx.NewRule().Named("rbracket").Chars("]").Repeat(1).Capture(false)
+	apos := stx.NewRule("apos").Repeat(1).Chars("'").Capture(false)
+	comma := stx.NewRule("comma").Repeat(1).Chars(",").Capture(false)
+	lbracket := stx.NewRule("lbracket").Repeat(1).Chars("[").Capture(false)
+	rbracket := stx.NewRule("rbracket").Repeat(1).Chars("]").Capture(false)
 
 	num := stx.RuleNum
 	alp := stx.RuleAlpha
@@ -727,7 +727,7 @@ func Test_Integration2(t *testing.T) {
 			"", nil)
 	})
 
-	colon := stx.NewRule().Named("colon").Chars(":").Repeat(1).Capture(false)
+	colon := stx.NewRule("colon").Repeat(1).Chars(":").Capture(false)
 	kv := stx.NewSequence("kv",
 		anyVal, colon, anyVal,
 	)
@@ -738,8 +738,8 @@ func Test_Integration2(t *testing.T) {
 		kv,
 	)
 
-	lbrace := stx.NewRule().Named("lbrace").Chars("{").Repeat(1).Capture(false)
-	rbrace := stx.NewRule().Named("rbrace").Chars("}").Repeat(1).Capture(false)
+	lbrace := stx.NewRule("lbrace").Repeat(1).Chars("{").Capture(false)
+	rbrace := stx.NewRule("rbrace").Repeat(1).Chars("}").Capture(false)
 	object := stx.NewSequence("object",
 		lbrace,
 		kvRepeat,

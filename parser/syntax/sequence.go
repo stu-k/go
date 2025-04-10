@@ -8,12 +8,9 @@ import (
 	"github.com/stu-k/go/parser/errors"
 )
 
-type Parsable interface {
-	Parse(string) (*ParseResult, error)
-	Name() string
+type Sequencer interface {
+	Seq() *Sequence
 }
-
-type ParseFn func(string) (*ParseResult, error)
 
 type Sequence struct {
 	name    string
@@ -264,7 +261,7 @@ func newSequenceFromStrs(name string, pmap map[string]*Rule, parts ...string) (*
 			}
 		}
 
-		rule := NewRule()
+		rule := NewRule("any")
 		if sqa.rule != nil {
 			rule = sqa.rule
 		} else {
