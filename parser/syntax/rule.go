@@ -166,7 +166,7 @@ func (a *Rule) parseStrRepeat(match, s string, n int) (*ParseResult, error) {
 	for i := 0; i < n; i++ {
 		result, err := a.parseStr(match, results.Rest())
 		if err != nil {
-			if results.IsEmpy() {
+			if results.Len() == 0 {
 				return retErr(a.name, errors.NewBadMatchErr(a.name, s, "parsestrrepeat:nofirstmatch"))
 			}
 			break
@@ -176,7 +176,7 @@ func (a *Rule) parseStrRepeat(match, s string, n int) (*ParseResult, error) {
 		count++
 	}
 
-	if results.IsEmpy() {
+	if results.Len() == 0 {
 		return retErr(a.name, errors.NewBadMatchErr(a.name, s, "parsestrrepeat:emptyresult"))
 	}
 	if count < n {
