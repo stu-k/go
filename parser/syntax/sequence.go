@@ -52,16 +52,18 @@ func (r *Sequence) SetCapture(v bool) *Sequence {
 	return new
 }
 func (r *Sequence) Parse(s string) (*ParseResult, error) {
-	results := NewParseResult(r.name, nil, s)
-	for _, rule := range r.list {
-		result, err := rule.Parse(results.Rest())
+	return Parse(r.name, s, r.list...)
+}
+
+func Parse(name, s string, pars ...Parsable) (*ParseResult, error) {
+	results := NewParseResult(name, nil, s)
+	for _, p := range pars {
+		result, err := p.Parse(results.Rest())
 		if err != nil {
-			return retErr(r.name, err)
+			return retErr(name, err)
 		}
 
-		if r.capture {
-			results.Append(result)
-		}
+		results.Append(result)
 		results.SetRest(result.Rest())
 	}
 	return results, nil

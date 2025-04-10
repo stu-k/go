@@ -7,14 +7,14 @@ type ParseResult struct {
 	resultMap   map[string]*ParseResult
 }
 
-func NewParseResult(n string, s []string, r string) *ParseResult {
+func NewParseResult(name string, s []string, rest string) *ParseResult {
 	if s == nil {
 		s = []string{}
 	}
 	return &ParseResult{
-		name:        n,
+		name:        name,
 		resultsStrs: s,
-		rest:        r,
+		rest:        rest,
 		resultMap:   make(map[string]*ParseResult),
 	}
 }
