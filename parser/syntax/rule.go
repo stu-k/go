@@ -187,72 +187,53 @@ func (a *Rule) parseStrRepeat(match, s string, n int) (*ParseResult, error) {
 }
 
 func (a *Rule) parseChar(s string) (*ParseResult, error) {
-	shouldRepeat := a.repeat >= 0
-	if len(s) == 0 {
-		return retErr(a.name, errors.NewBadMatchErr(a.name, s, "rule:parsechar:emptystr"))
-	}
+	return charParser{
+		a.name,
+		a.repeat,
+		a.capture,
+		a.checkChar,
+	}.Parse(s)
+}
+
+type charParser struct {
+	name    string
+	repeat  int
+	capture bool
+	check   func(string) bool
+}
+
+func (p charParser) Parse(s string) (*ParseResult, error) {
+	shouldRepeat := p.repeat > 0
 
 	var result string
-
-	// add Rule.Start into result and iterate
-	// past the value
-	toparse := s
-
 	var count int
-	var r rune
 
-	// handle checking results on end of string
-	// or invalid character
-	checkEnd := func(ct int) error {
-		if len(result) == 0 {
-			return errors.NewBadMatchErr(a.name, s, "parsechar:noresult")
+	for _, c := range s {
+		r := rune(c)
+
+		if shouldRepeat && count >= p.repeat {
+			break
 		}
 
-		if shouldRepeat && ct < a.repeat {
-			return errors.NewBadMatchErr(a.name, s, "parsechar:lowcount")
-		}
-
-		return nil
-	}
-
-	for i, c := range toparse {
-		r = rune(c)
-
-		countToUse := count
-
-		if shouldRepeat {
-			if countToUse >= a.repeat {
-				if a.capture {
-					return NewParseResult(a.name, []string{result}, s[i:]), nil
-				}
-				return NewParseResult(a.name, nil, s[i:]), nil
-			}
-		}
-
-		ok := a.checkChar(string(r))
+		ok := p.check(string(r))
 		if !ok {
-			err := checkEnd(countToUse)
-			if err != nil {
-				return retErr(a.name, err)
-			}
-
-			if a.capture {
-				return NewParseResult(a.name, []string{result}, s[i:]), nil
-			}
-			return NewParseResult(a.name, nil, s[i:]), nil
+			break
 		}
 
 		result += string(r)
 		count++
 	}
 
-	err := checkEnd(count)
-	if err != nil {
-		return retErr(a.name, err)
+	if len(result) == 0 {
+		return retErr(p.name, errors.NewBadMatchErr(p.name, s, "parsechar:nores"))
 	}
 
-	if a.capture {
-		return NewParseResult(a.name, []string{result}, s[count:]), nil
+	if shouldRepeat && count < p.repeat {
+		return retErr(p.name, errors.NewBadMatchErr(p.name, s, "parsechar:toofew"))
 	}
-	return NewParseResult(a.name, nil, s[count:]), nil
+
+	if p.capture {
+		return NewParseResult(p.name, []string{result}, s[count:]), nil
+	}
+	return NewParseResult(p.name, nil, s[count:]), nil
 }
