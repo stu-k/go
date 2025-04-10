@@ -57,11 +57,11 @@ func NewRule(n string) *Rule { return ruleAny.clone().Named(n) }
 func (a *Rule) clone() *Rule {
 	new := &Rule{
 		name:     a.name,
-		repeat:   a.repeat,
 		capture:  a.capture,
 		checkStr: a.checkStr,
 		modified: true,
 	}
+	new.repeat = a.repeat
 	new.checkChar = a.checkChar
 	return new
 }
@@ -116,8 +116,7 @@ func (a *Rule) Chars(s string) *Rule {
 }
 
 func (a *Rule) Seq() *Sequence {
-	s := NewSequence(a.name, a)
-	return s
+	return NewSequence(a.name, a)
 }
 
 func (a *Rule) Repeat(n int) *Rule {
