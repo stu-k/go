@@ -41,7 +41,7 @@ func TestResult(t *testing.T) {
 
 func TestResultFor(t *testing.T) {
 	res := stx.NewResult("abc", nil, "")
-	res1 := stx.NewResult("123", nil, "")
+	res1 := stx.NewResult("123", []string{"foo"}, "")
 	res.Append(res1)
 
 	t.Logf("[abc] map: %v", res.ResultMap())

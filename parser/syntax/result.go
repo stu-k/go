@@ -32,7 +32,7 @@ func (p *Result) Rest() string {
 }
 
 func (p *Result) Append(r *Result) {
-	if r == nil {
+	if r == nil || r.IsEmpy() {
 		return
 	}
 	p.resultMap[r.Name()] = r
@@ -41,13 +41,6 @@ func (p *Result) Append(r *Result) {
 
 func (p *Result) SetRest(r string) {
 	p.rest = r
-}
-
-func (p *Result) Len() int {
-	if p.resultsStrs == nil || p.resultMap == nil {
-		return 0
-	}
-	return len(p.resultMap)
 }
 
 func (p *Result) NameMap() map[string][]string {

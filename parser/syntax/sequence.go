@@ -90,7 +90,7 @@ func (r *Sequence) untilFail(s string) (*Result, error) {
 	for {
 		results, err := r.Parse(all.Rest())
 		if err != nil {
-			if all.Len() == 0 {
+			if len(all.Strings()) == 0 {
 				return retErr(r.name, err)
 			}
 			return all, nil
@@ -130,7 +130,7 @@ func (r *Sequence) anyOf(s string) (*Result, error) {
 		}
 	}
 
-	if all.Len() == 0 {
+	if len(all.Strings()) == 0 {
 		return retErr(r.name, errors.NewBadMatchErr(r.name, s, "anyof:emptyres"))
 	}
 
