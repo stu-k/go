@@ -23,10 +23,10 @@ var meq = func(a, b map[string][]string) bool {
 }
 
 func TestResult(t *testing.T) {
-	x := stx.NewParseResult("x", nil, "")
+	x := stx.NewResult("x", nil, "")
 	y := "y"
 	wantY := ss(y, y)
-	yr := stx.NewParseResult(y, wantY, "")
+	yr := stx.NewResult(y, wantY, "")
 	x.Append(yr)
 	m := x.NameMap()
 
@@ -40,8 +40,8 @@ func TestResult(t *testing.T) {
 }
 
 func TestResultFor(t *testing.T) {
-	res := stx.NewParseResult("abc", nil, "")
-	res1 := stx.NewParseResult("123", nil, "")
+	res := stx.NewResult("abc", nil, "")
+	res1 := stx.NewResult("123", nil, "")
 	res.Append(res1)
 
 	t.Logf("[abc] map: %v", res.ResultMap())

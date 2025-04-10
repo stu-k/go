@@ -3,7 +3,7 @@ package syntax
 import "fmt"
 
 type Parsable interface {
-	Parse(string) (*ParseResult, error)
+	Parse(string) (*Result, error)
 	Name() string
 }
 
@@ -97,7 +97,7 @@ func (p *Parser) Using(n string) Parsable {
 
 type noopParser struct{}
 
-func (n *noopParser) Parse(_ string) (*ParseResult, error) {
+func (n *noopParser) Parse(_ string) (*Result, error) {
 	return retErr("noop", fmt.Errorf("[noop] no op parser used"))
 }
 

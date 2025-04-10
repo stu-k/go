@@ -124,7 +124,7 @@ func (a *Rule) Repeat(n int) *Rule {
 	return a
 }
 
-func (a *Rule) Parse(s string) (*ParseResult, error) {
+func (a *Rule) Parse(s string) (*Result, error) {
 	if a.checkChar == nil && len(a.checkStr) == 0 {
 		// defaulting to "none" rule to invalidate null pointers
 		fmt.Println("[ERR] DEFAULTED_NONE_RULE")
@@ -144,7 +144,7 @@ func (a *Rule) Parse(s string) (*ParseResult, error) {
 	return a.parseChar(s)
 }
 
-func (a *Rule) parseStr(match, s string) (*ParseResult, error) {
+func (a *Rule) parseStr(match, s string) (*Result, error) {
 	if len(s) == 0 || len(match) == 0 {
 		return retErr(a.name, errors.NewBadMatchErr(a.name, s, "parsestr:emptystr"))
 	}
@@ -153,16 +153,16 @@ func (a *Rule) parseStr(match, s string) (*ParseResult, error) {
 		return retErr(a.name, errors.NewBadMatchErr(a.name, s, "parsestr:noprefix"))
 	}
 
-	return NewParseResult(a.name, []string{match}, s[len(match):]), nil
+	return NewResult(a.name, []string{match}, s[len(match):]), nil
 }
 
-func (a *Rule) parseStrRepeat(match, s string, n int) (*ParseResult, error) {
+func (a *Rule) parseStrRepeat(match, s string, n int) (*Result, error) {
 	if len(s) == 0 || len(match) == 0 {
 		return retErr(a.name, errors.NewBadMatchErr(a.name, s, "parsestrrepeat:emptystr"))
 	}
 
 	var count int
-	results := NewParseResult(a.name, nil, s)
+	results := NewResult(a.name, nil, s)
 	for i := 0; i < n; i++ {
 		result, err := a.parseStr(match, results.Rest())
 		if err != nil {
@@ -186,7 +186,7 @@ func (a *Rule) parseStrRepeat(match, s string, n int) (*ParseResult, error) {
 	return results, nil
 }
 
-func (a *Rule) parseChar(s string) (*ParseResult, error) {
+func (a *Rule) parseChar(s string) (*Result, error) {
 	return charParser{
 		a.name,
 		a.repeat,
@@ -202,7 +202,7 @@ type charParser struct {
 	check   func(string) bool
 }
 
-func (p charParser) Parse(s string) (*ParseResult, error) {
+func (p charParser) Parse(s string) (*Result, error) {
 	shouldRepeat := p.repeat > 0
 
 	var result string
@@ -233,7 +233,7 @@ func (p charParser) Parse(s string) (*ParseResult, error) {
 	}
 
 	if p.capture {
-		return NewParseResult(p.name, []string{result}, s[count:]), nil
+		return NewResult(p.name, []string{result}, s[count:]), nil
 	}
-	return NewParseResult(p.name, nil, s[count:]), nil
+	return NewResult(p.name, nil, s[count:]), nil
 }
