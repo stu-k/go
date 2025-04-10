@@ -223,11 +223,13 @@ func newSequenceFromStrs(name string, pmap map[string]*Rule, parts ...string) (*
 			switch rune(arg[0]) {
 
 			case 'r':
+				// dangeroud to pull from pmap
+				// can mutate origin rules
 				seq, ok := pmap[arg[1:]]
 				if !ok || seq == nil {
 					return nil, errFn(arg, i, j)
 				}
-				sqa.rule = seq
+				sqa.rule = seq.Named(arg[1:])
 				continue
 
 			case '#':
@@ -267,7 +269,7 @@ func newSequenceFromStrs(name string, pmap map[string]*Rule, parts ...string) (*
 		} else {
 			rule = rule.Named(part)
 		}
-		if sqa.repeat != 0 {
+		if sqa.repeat > 0 {
 			rule = rule.Repeat(sqa.repeat)
 		}
 		if sqa.char != 0 {

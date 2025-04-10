@@ -120,9 +120,8 @@ func (a *Rule) Seq() *Sequence {
 }
 
 func (a *Rule) Repeat(n int) *Rule {
-	new := a.clone()
-	new.repeat = n
-	return new
+	a.repeat = n
+	return a
 }
 
 func (a *Rule) Parse(s string) (*ParseResult, error) {

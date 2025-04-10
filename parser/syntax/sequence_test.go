@@ -187,7 +187,7 @@ func TestSeqUntilFail(t *testing.T) {
 			for _, test := range tests {
 				got, err := rs.UntilFail().Parse(test.in)
 				if !errors.Is(err, test.err) {
-					t.Fatalf("for \"%v\" expected error \"%v\"; got \"%v\"", test.in, test.err, err)
+					t.Errorf("for \"%v\" expected error \"%v\"; got \"%v\"", test.in, test.err, err)
 				}
 
 				if !eq(got.Strings(), test.want) {
@@ -576,22 +576,6 @@ func Test_Integration(t *testing.T) {
 		nil,
 	}
 
-	tests["quoted alpha comma repeat in parens"] = testcase{
-		"('foo','bar','baz',)", "",
-		ss("foo", "bar", "baz"),
-		[]stx.Parsable{
-			stx.NewRule("lparen").Chars("(").Capture(false),
-			stx.NewSequence("alpha comma",
-				stx.NewRule("apos").Chars("'").Capture(false),
-				stx.RuleAlpha.Named("alpha"),
-				stx.NewRule("apos").Chars("'").Capture(false),
-				stx.NewRule("comma").Chars(",").Capture(false),
-			).UntilFail(),
-			stx.NewRule("rparen").Chars(")").Capture(false),
-		},
-		nil,
-	}
-
 	keyval := stx.NewSequence("k/'k':n",
 		stx.NewSequence("'v'/v",
 			stx.NewSequence("'al'",
@@ -615,7 +599,7 @@ func Test_Integration(t *testing.T) {
 		keyval,
 		stx.NewRule("rparen").Chars(")").Capture(false),
 	)
-	tests["quoted alpha comma repeat in parens"] = testcase{
+	tests["quoted alpha comma no trailing comma in parens"] = testcase{
 		"('foo':1,bar:2,'baz':3,quux:4) ()", " ()",
 		ss("foo", "1", "bar", "2", "baz", "3", "quux", "4"),
 		[]stx.Parsable{kvtuple},
