@@ -555,5 +555,4 @@ func Test_Integration2(t *testing.T) {
 			ss("abc", "123", "xyz", "321", "zyx", "cba"),
 			"", nil)
 	})
-
 }

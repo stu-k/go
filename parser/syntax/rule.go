@@ -6,11 +6,6 @@ import (
 	"github.com/stu-k/go/parser/errors"
 )
 
-var defaultRulemap = map[string]*Rule{
-	"alpha": RuleAlpha,
-	"num":   RuleNum,
-}
-
 var ruleAny = &Rule{
 	name:     "DEFAULT_ANY_RULE",
 	repeat:   -1,

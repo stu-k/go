@@ -16,36 +16,17 @@ func TestParser(t *testing.T) {
 	p.NewSeq("comma", stx.NewRule("comma").Repeat(1).Chars(",").Capture(false))
 	p.NewSeq("rbracket", stx.NewRule("lbracket").Repeat(1).Chars("[").Capture(false))
 	p.NewSeq("lbarcket", stx.NewRule("rbracket").Repeat(1).Chars("]").Capture(false))
-	p.NewSeq("alphanum", "num", "alpha")
-	t.Run("one", func(t *testing.T) {
-		res, err := p.Using("alpha").Parse("abc123")
-		fmt.Printf("res: %+v\nerr: %v\n", res, err)
+	p.NewSeq("alphanum", stx.NewRule("alphanum").CheckChar(func(r rune) bool {
+		return unicode.IsLetter(r) || unicode.IsNumber(r)
+	}))
+	p.NewSeq("quoted", "apos", "alphanum", "apos")
+	p.NewPickOne("val", "alpha", "num", "quoted")
+	p.NewUntilFail("val,", "val", "comma")
+	p.NewSeq("val,val", "val,", "val")
+	p.NewSeq("arr", "lbracket", "val,val", "rbracket")
+
+	t.Run("arr", func(t *testing.T) {
+		got, _ := p.Using("arr").Parse("[1,'2','a',b]")
+		fmt.Printf("got: %+v", got)
 	})
-	t.Run("two", func(t *testing.T) {
-		res, err := p.Using("alphanum").Parse("abc123")
-		fmt.Printf("res: %+v\nerr: %v\n", res, err)
-	})
-
-	// p.NewPickOne("alphanum",
-	// )
-	// str := p.NewSeq("quoted",
-	// 	apos, alphanum, apos,
-	// )
-
-	// anyVal := stx.NewSequence("anyval",
-	// 	alp, num, str,
-	// ).PickOne()
-	// valComma := stx.NewSequence("anyval comma",
-	// 	anyVal, comma,
-	// )
-	// valCommaEnd := stx.NewSequence("anyval comma end optional",
-	// 	valComma.UntilFail(),
-	// 	anyVal,
-	// )
-
-	// arr := stx.NewSequence("arr",
-	// 	lbracket,
-	// 	valCommaEnd,
-	// 	rbracket,
-	// )
 }
