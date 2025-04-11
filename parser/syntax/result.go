@@ -32,7 +32,7 @@ func (p *Result) Rest() string {
 }
 
 func (p *Result) Append(r *Result) {
-	if r == nil || r.IsEmpy() {
+	if r == nil || len(r.Strings()) == 0 {
 		return
 	}
 	p.resultMap[r.Name()] = r

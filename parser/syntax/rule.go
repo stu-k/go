@@ -2,7 +2,6 @@ package syntax
 
 import (
 	"fmt"
-	"strings"
 	"unicode"
 
 	"github.com/stu-k/go/parser/errors"
@@ -18,7 +17,6 @@ var ruleAny = &Rule{
 	repeat:    -1,
 	capture:   true,
 	checkChar: func(_ string) bool { return true },
-	checkStr:  "",
 	modified:  false,
 }
 
@@ -45,9 +43,6 @@ type Rule struct {
 	// in a string are valid for the rule
 	checkChar func(string) bool
 
-	// checkStr is the exact string for a rule to parse against
-	checkStr string
-
 	// modified informs if the rule has been changed from the default
 	modified bool
 }
@@ -58,7 +53,6 @@ func (a *Rule) clone() *Rule {
 	new := &Rule{
 		name:     a.name,
 		capture:  a.capture,
-		checkStr: a.checkStr,
 		modified: true,
 	}
 	new.repeat = a.repeat
@@ -84,13 +78,6 @@ func (a *Rule) CheckChar(fn func(rune) bool) *Rule {
 	a.checkChar = func(s string) bool {
 		return len(s) > 0 && fn(rune(s[0]))
 	}
-	a.checkStr = ""
-	return a
-}
-
-func (a *Rule) CheckStr(s string) *Rule {
-	a.checkStr = s
-	a.checkChar = nil
 	return a
 }
 
@@ -125,7 +112,7 @@ func (a *Rule) Repeat(n int) *Rule {
 }
 
 func (a *Rule) Parse(s string) (*Result, error) {
-	if a.checkChar == nil && len(a.checkStr) == 0 {
+	if a.checkChar == nil {
 		// defaulting to "none" rule to invalidate null pointers
 		fmt.Println("[ERR] DEFAULTED_NONE_RULE")
 		return a.clone().
@@ -134,53 +121,7 @@ func (a *Rule) Parse(s string) (*Result, error) {
 			Parse(s)
 	}
 
-	if len(a.checkStr) > 0 {
-		if a.repeat > -1 {
-			return a.parseStrRepeat(a.checkStr, s, a.repeat)
-		}
-		return a.parseStr(a.checkStr, s)
-	}
-
 	return a.parseChar(s)
-}
-
-func (a *Rule) parseStr(match, s string) (*Result, error) {
-	if len(s) == 0 || len(match) == 0 {
-		return retErr(a.name, errors.NewBadMatchErr(a.name, s, "parsestr:emptystr"))
-	}
-
-	if !strings.HasPrefix(s, match) {
-		return retErr(a.name, errors.NewBadMatchErr(a.name, s, "parsestr:noprefix"))
-	}
-
-	return NewResult(a.name, []string{match}, s[len(match):]), nil
-}
-
-func (a *Rule) parseStrRepeat(match, s string, n int) (*Result, error) {
-	if len(s) == 0 || len(match) == 0 {
-		return retErr(a.name, errors.NewBadMatchErr(a.name, s, "parsestrrepeat:emptystr"))
-	}
-
-	var count int
-	results := NewResult(a.name, nil, s)
-	for i := 0; i < n; i++ {
-		result, _ := a.parseStr(match, results.Rest())
-		if result.IsEmpy() {
-			break
-		}
-		results.Append(result)
-		results.SetRest(result.Rest())
-		count++
-	}
-
-	if results.IsEmpy() {
-		return NewResult(a.name, nil, ""), nil
-	}
-	if count < n {
-		return NewResult(a.name, nil, ""), nil
-	}
-
-	return results, nil
 }
 
 func (a *Rule) parseChar(s string) (*Result, error) {
