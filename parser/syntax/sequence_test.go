@@ -114,13 +114,18 @@ func TestSequence(t *testing.T) {
 	}
 }
 
+var (
+	alp   = stx.RuleAlpha
+	alp1  = alp.Named("alp1").Repeat(1)
+	comma = stx.NewRule(",").Repeat(1).Capture(false).Chars(",")
+	colon = alp.Named(":").Chars(":").Repeat(1)
+	num   = stx.RuleNum
+)
+
 func TestSeqUntilFail(t *testing.T) {
-	mk := func(s string, r ...string) (*stx.Sequence, error) {
-		rfs, err := stx.NewSequenceFromStrs(s, r...)
-		if err != nil {
-			return nil, err
-		}
-		return rfs, nil
+	mk := func(s string, r ...stx.Parsable) (*stx.Sequence, error) {
+		seq := stx.NewSequence(s, r...)
+		return seq, nil
 	}
 
 	type seqTest struct {
@@ -134,7 +139,7 @@ func TestSeqUntilFail(t *testing.T) {
 
 	sq, err := mk(
 		"alpha 1",
-		"ralpha, #1",
+		alp1,
 	)
 	if err != nil {
 		t.Fatalf("ruleset creation failed: %v", err)
@@ -150,9 +155,10 @@ func TestSeqUntilFail(t *testing.T) {
 		{".", ss(), "", nil},
 	}
 
+	comma1 := stx.NewRule(":1").Chars(",").Repeat(1)
 	sq, err = mk(
 		"alpha comma",
-		"ralpha, #1", "c,, #1",
+		alp1, comma1,
 	)
 	if err != nil {
 		t.Fatalf("ruleset creation failed: %v", err)
@@ -168,7 +174,7 @@ func TestSeqUntilFail(t *testing.T) {
 
 	sq, err = mk(
 		"str: num",
-		"ralpha", "c:, #1", "rnum",
+		alp, colon, num,
 	)
 	if err != nil {
 		t.Fatalf("ruleset creation failed: %v", err)
@@ -203,11 +209,8 @@ func TestSeqUntilFail(t *testing.T) {
 }
 
 func TestSeqAnyOf(t *testing.T) {
-	mk := func(s string, r ...string) (stx.Parsable, error) {
-		sfs, err := stx.NewSequenceFromStrs(s, r...)
-		if err != nil {
-			return nil, err
-		}
+	mk := func(s string, r ...stx.Parsable) (stx.Parsable, error) {
+		sfs := stx.NewSequence(s, r...)
 		return sfs, nil
 	}
 
@@ -221,31 +224,34 @@ func TestSeqAnyOf(t *testing.T) {
 
 	sq1, err := mk(
 		"alp",
-		"ralpha",
+		alp,
 	)
 	if err != nil {
 		t.Fatalf("ruleset creation failed: %v", err)
 	}
 
+	a1 := stx.NewRule("a1").Chars("a").Repeat(1)
 	sq2, err := mk(
 		"1a",
-		"ca, #1",
+		a1,
 	)
 	if err != nil {
 		t.Fatalf("ruleset creation failed: %v", err)
 	}
 
+	alp2 := alp.Named("alp2")
 	sq3, err := mk(
 		"2alp",
-		"ralpha, #2",
+		alp2,
 	)
 	if err != nil {
 		t.Fatalf("ruleset creation failed: %v", err)
 	}
 
+	b2 := stx.NewRule("b2").Chars("b").Repeat(2)
 	sq4, err := mk(
 		"2b",
-		"cb, #2",
+		b2,
 	)
 	if err != nil {
 		t.Fatalf("ruleset creation failed: %v", err)
@@ -270,15 +276,16 @@ func TestSeqAnyOf(t *testing.T) {
 
 	sq1, err = mk(
 		"var",
-		"ralpha",
+		alp,
 	)
 	if err != nil {
 		t.Fatalf("ruleset creation failed: %v", err)
 	}
 
+	apos := stx.NewRule("'").Repeat(1).Chars("'")
 	sq2, err = mk(
 		"str",
-		"c', #1", "ralpha", "c', #1",
+		apos, alp, apos,
 	)
 	if err != nil {
 		t.Fatalf("ruleset creation failed: %v", err)
@@ -305,197 +312,6 @@ func TestSeqAnyOf(t *testing.T) {
 					if !got.HasResult(v) {
 						t.Errorf("for \"%v\" expected key \"%v\" in nameMap %v", test.in, v, got.NameMap())
 					}
-				}
-			}
-		})
-	}
-}
-
-func TestSeqFromStrs(t *testing.T) {
-	type seqTest struct {
-		in   string
-		rs   *stx.Sequence
-		want []string
-		rest string
-		err  error
-	}
-
-	sqTests := make(map[*stx.Sequence][]seqTest)
-
-	sq, err := stx.NewSequenceFromStrs(
-		"alpha",
-		"ralpha")
-	if err != nil {
-		t.Fatalf("sequence creation failed: %v", err)
-	}
-
-	sqTests[sq] = []seqTest{
-		{"abc", sq, ss("abc"), "", nil},
-		{"ab.c", sq, ss("ab"), ".c", nil},
-		{"abc.", sq, ss("abc"), ".", nil},
-		{".", sq, ss(), "", errs.ErrBadMatch},
-	}
-
-	sq, err = stx.NewSequenceFromStrs(
-		"num",
-		"rnum",
-	)
-	if err != nil {
-		t.Fatalf("sequence creation failed: %v", err)
-	}
-
-	sqTests[sq] = []seqTest{
-		{"123", sq, ss("123"), "", nil},
-		{"12.3", sq, ss("12"), ".3", nil},
-		{"123.", sq, ss("123"), ".", nil},
-	}
-
-	sq, err = stx.NewSequenceFromStrs(
-		"alphanum",
-		"ralpha", "rnum",
-	)
-	if err != nil {
-		t.Fatalf("sequence creation failed: %v", err)
-	}
-
-	sqTests[sq] = []seqTest{
-		{"a1", sq, ss("a", "1"), "", nil},
-		{"abc123", sq, ss("abc", "123"), "", nil},
-		{"a1.", sq, ss("a", "1"), ".", nil},
-		{"a", sq, ss(), "", errs.ErrBadMatch},
-		{"1", sq, ss(), "", errs.ErrBadMatch},
-		{"a.1", sq, ss(), "", errs.ErrBadMatch},
-	}
-
-	sq, err = stx.NewSequenceFromStrs(
-		"kv(var var)",
-		"ralpha", "c:, #1", "rnum",
-	)
-	if err != nil {
-		t.Fatalf("sequence creation failed: %v", err)
-	}
-
-	sqTests[sq] = []seqTest{
-		{"a:1", sq, ss("a", ":", "1"), "", nil},
-		{"abc:123", sq, ss("abc", ":", "123"), "", nil},
-
-		{"a::1", sq, nil, "", errs.ErrBadMatch},
-		{":1", sq, nil, "", errs.ErrBadMatch},
-		{"a1", sq, nil, "", errs.ErrBadMatch},
-		{"a:", sq, nil, "", errs.ErrBadMatch},
-
-		{".a:1", sq, nil, "", errs.ErrBadMatch},
-		{"a.:1", sq, nil, "", errs.ErrBadMatch},
-		{"a:.1", sq, nil, "", errs.ErrBadMatch},
-		{"a:1.", sq, ss("a", ":", "1"), ".", nil},
-	}
-
-	sq, err = stx.NewSequenceFromStrs(
-		"obj(kv(var var))",
-		"c{, #1", "ralpha", "c:, #1", "ralpha", "c}, #1",
-	)
-	if err != nil {
-		t.Fatalf("sequence creation failed: %v", err)
-	}
-
-	sqTests[sq] = []seqTest{
-		{"{a:x}", sq, ss("{", "a", ":", "x", "}"), "", nil},
-		{"{abc:xyz}", sq, ss("{", "abc", ":", "xyz", "}"), "", nil},
-
-		{".", sq, ss(), "", errs.ErrBadMatch},
-		{".{a:x}", sq, ss(), "", errs.ErrBadMatch},
-		{"{.a:x}", sq, ss(), "", errs.ErrBadMatch},
-		{"{a.:x}", sq, ss(), "", errs.ErrBadMatch},
-		{"{a:.x}", sq, ss(), "", errs.ErrBadMatch},
-		{"{a:x.}", sq, ss(), "", errs.ErrBadMatch},
-		{"{a:x}.", sq, ss("{", "a", ":", "x", "}"), ".", nil},
-	}
-
-	sq, err = stx.NewSequenceFromStrs(
-		"obj(kv(_var_ var))",
-		"c{, #1", "c_, #1", "ralpha", "c_, #1", "c:, #1", "ralpha", "c}, #1",
-	)
-	if err != nil {
-		t.Fatalf("sequence creation failed: %v", err)
-	}
-
-	sqTests[sq] = []seqTest{
-		{"{_a_:x}", sq, ss("{", "_", "a", "_", ":", "x", "}"), "", nil},
-		{"{_abc_:xyz}", sq, ss("{", "_", "abc", "_", ":", "xyz", "}"), "", nil},
-
-		{".", sq, ss(), "", errs.ErrBadMatch},
-	}
-
-	sq, err = stx.NewSequenceFromStrs(
-		"test special vals",
-		"c,, #1", "rnum", "c|, #1",
-	)
-	if err != nil {
-		t.Fatalf("sequence creation failed: %v", err)
-	}
-
-	sqTests[sq] = []seqTest{
-		{".", sq, ss(), "", errs.ErrBadMatch},
-
-		{",1|", sq, ss(",", "1", "|"), "", nil},
-	}
-
-	sq, err = stx.NewSequenceFromStrs(
-		"alpha comma",
-		"ralpha, #1", "c,, #1", "ralpha, #1", "c,, #1", "ralpha, #1", "c,, #1",
-	)
-	if err != nil {
-		t.Fatalf("sequence creation failed: %v", err)
-	}
-
-	sqTests[sq] = []seqTest{
-		{".", sq, ss(), "", errs.ErrBadMatch},
-		{"a,b,c,", sq, ss("a", ",", "b", ",", "c", ","), "", nil},
-	}
-
-	sq, err = stx.NewSequenceFromStrs(
-		"alpha3",
-		"ralpha, #1", "ralpha, #1", "ralpha, #1",
-	)
-	if err != nil {
-		t.Fatalf("sequence creation failed: %v", err)
-	}
-
-	sqTests[sq] = []seqTest{
-		{".", sq, ss(), "", errs.ErrBadMatch},
-		{"abc", sq, ss("a", "b", "c"), "", nil},
-	}
-
-	sq, err = stx.NewSequenceFromStrs(
-		"capture",
-		"ralpha", "c:, g0", "rnum",
-	)
-	if err != nil {
-		t.Fatalf("sequence creation failed: %v", err)
-	}
-
-	sqTests[sq] = []seqTest{
-		{"a:1", sq, ss("a", "1"), "", nil},
-		{"abc:123", sq, ss("abc", "123"), "", nil},
-		{"a::1", sq, ss("a", "1"), "", nil},
-
-		{".", sq, ss(), "", errs.ErrBadMatch},
-	}
-
-	for rs, tests := range sqTests {
-		t.Run(rs.Name(), func(t *testing.T) {
-			for _, test := range tests {
-				got, err := test.rs.Parse(test.in)
-				if !errors.Is(err, test.err) {
-					t.Fatalf("for \"%v\" expected error \"%v\"; got \"%v\"", test.in, test.err, err)
-				}
-
-				if !eq(got.Strings(), test.want) {
-					t.Errorf("for \"%v\" expected output \"%v\"; got \"%v\"", test.in, test.want, got)
-				}
-
-				if got.Rest() != test.rest {
-					t.Errorf("for \"%v\" expected remainder \"%v\"; got \"%v\"", test.in, test.rest, got.Rest())
 				}
 			}
 		})
