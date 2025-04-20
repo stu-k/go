@@ -9,10 +9,11 @@ import (
 type Message struct {
 	Type  string          `json:"type"`
 	Data  json.RawMessage `json:"data"`
+	Meta  json.RawMessage `json:"meta"`
 	Error string          `jons:"error"`
 }
 
-func NewMessage(t string, d interface{}, e error) (*Message, error) {
+func NewMessage(t string, d interface{}, meta json.RawMessage, e error) (*Message, error) {
 	data, err := json.Marshal(d)
 	if err != nil {
 		return nil, err
@@ -26,6 +27,7 @@ func NewMessage(t string, d interface{}, e error) (*Message, error) {
 	return &Message{
 		Type:  t,
 		Data:  data,
+		Meta:  meta,
 		Error: errS,
 	}, nil
 }
